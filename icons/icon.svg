@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="cartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+
+  <!-- Shopping Trolley Body -->
+  <g transform="translate(64, 70)" filter="url(#glow)">
+    <!-- Cart wheels -->
+    <circle cx="110" cy="300" r="28" fill="#10b981" />
+    <circle cx="110" cy="300" r="12" fill="#064e3b" />
+    <circle cx="280" cy="300" r="28" fill="#10b981" />
+    <circle cx="280" cy="300" r="12" fill="#064e3b" />
+
+    <!-- Cart Frame Lines -->
+    <path d="M 40 40 L 90 40 L 130 220 L 300 220 L 330 110 L 105 110" 
+          fill="none" stroke="url(#cartGrad)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="160" y1="110" x2="150" y2="220" stroke="url(#cartGrad)" stroke-width="14" stroke-linecap="round" />
+    <line x1="220" y1="110" x2="215" y2="220" stroke="url(#cartGrad)" stroke-width="14" stroke-linecap="round" />
+    <line x1="275" y1="110" x2="270" y2="220" stroke="url(#cartGrad)" stroke-width="14" stroke-linecap="round" />
+
+    <!-- Safety Shield Center -->
+    <g transform="translate(195, 100) scale(0.85)">
+      <path d="M 50 10 L 90 26 C 90 70 50 96 50 96 C 50 96 10 70 10 26 Z" 
+            fill="url(#shieldGrad)" stroke="#ffffff" stroke-width="6" />
+      <!-- Discount % symbol inside shield -->
+      <text x="50" y="62" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#ffffff" text-anchor="middle">%</text>
+    </g>
+
+    <!-- Trolley items (groceries silhouette) -->
+    <circle cx="170" cy="85" r="22" fill="#fbbf24" opacity="0.9" />
+    <rect x="210" y="65" width="28" height="42" rx="6" fill="#f87171" opacity="0.9" />
+    <rect x="245" y="55" width="30" height="52" rx="4" fill="#60a5fa" opacity="0.9" />
+  </g>
+
+  <!-- Floating Discount Badge -->
+  <g transform="translate(90, 310)">
+    <circle cx="48" cy="48" r="42" fill="#f59e0b" stroke="#ffffff" stroke-width="6" />
+    <text x="48" y="56" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#ffffff" text-anchor="middle">Rp</text>
+  </g>
+</svg>
