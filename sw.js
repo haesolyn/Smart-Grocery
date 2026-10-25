@@ -1,8 +1,9 @@
-const CACHE_NAME = 'smart-grocery-v12';
+const CACHE_NAME = 'smart-grocery-v13';
 const ASSETS = [
   './',
   './index.html',
   './css/app.css',
+  './favicon.ico',
   './js/firebase-config.js',
   './js/app.js',
   './js/grocery.js',
@@ -13,15 +14,18 @@ const ASSETS = [
   './js/pwa.js',
   './manifest.json',
   './icons/app-logo.png',
+  './icons/icon-96.png',
   './icons/icon-192.png',
+  './icons/icon-384.png',
   './icons/icon-512.png',
-  './icons/icon.svg'
+  './icons/icon.svg',
+  './icons/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-caching offline assets v12');
+      console.log('[SW] Pre-caching offline assets v13');
       return cache.addAll(ASSETS).catch(err => console.warn('[SW] Cache addAll warning:', err));
     }).then(() => self.skipWaiting())
   );
