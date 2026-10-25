@@ -19,6 +19,15 @@ const App = {
 
   init() {
     console.log('[App] Initializing Smart Grocery PWA...');
+
+    // Pastikan semua perangkat memulai dari kondisi bersih (troli & riwayat kosong)
+    const CLEAN_SLATE_KEY = 'sg_clean_slate_v2';
+    if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
+      localStorage.removeItem('sg_cart_items');
+      localStorage.removeItem('sg_shopping_history');
+      localStorage.setItem(CLEAN_SLATE_KEY, 'true');
+    }
+
     SoundEngine.init();
     PWAHandler.init();
 

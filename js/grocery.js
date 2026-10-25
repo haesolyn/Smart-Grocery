@@ -23,39 +23,8 @@ const GroceryEngine = {
   // Satuan yang didukung
   UNITS: ['pcs', 'kg', 'liter', 'pack'],
 
-  // Default seed items jika keranjang baru pertama kali dibuka
-  defaultItems: [
-    {
-      id: 'cart_1',
-      name: 'Minyak Goreng Sania 2L',
-      category: 'staples',
-      unit: 'liter',
-      qty: 1,
-      unitPrice: 32500, // Turun vs bln lalu 34.000
-      discountStr: '0',
-      createdAt: Date.now() - 3600000
-    },
-    {
-      id: 'cart_2',
-      name: 'Beras Rojolele 5kg',
-      category: 'staples',
-      unit: 'kg',
-      qty: 1,
-      unitPrice: 72000, // Naik vs bln lalu 68.000
-      discountStr: '0',
-      createdAt: Date.now() - 3000000
-    },
-    {
-      id: 'cart_3',
-      name: 'Sabun Mandi Lifebuoy Refill 450ml',
-      category: 'toiletries',
-      unit: 'pcs',
-      qty: 2,
-      unitPrice: 22000,
-      discountStr: '50% + 20%', // Contoh diskon bertingkat F-03
-      createdAt: Date.now() - 2000000
-    }
-  ],
+  // Keranjang belanja baru selalu mulai kosong
+  defaultItems: [],
 
   getItems() {
     try {
@@ -66,9 +35,7 @@ const GroceryEngine = {
     } catch (e) {
       console.error('Error loading cart items:', e);
     }
-    // Seed default
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.defaultItems));
-    return this.defaultItems;
+    return [];
   },
 
   saveItems(items) {

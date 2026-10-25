@@ -53,16 +53,15 @@ const FirebaseSync = {
     return cleanId;
   },
 
-  // Mendapatkan dokumen referensi Firestore saat ini (Per-User jika login, atau Per-Room jika guest)
+  // Mendapatkan dokumen referensi Firestore saat ini (HANYA jika user sudah LOGIN Google)
   getTargetDocRef() {
     if (!this.db) return null;
     if (this.currentUser && this.currentUser.uid) {
       // PER-USER: Setiap user memiliki dokumen tersendiri yang terisolasi aman
       return this.db.collection('users').doc(this.currentUser.uid);
-    } else {
-      // GUEST / ROOM: Menggunakan kode ruang troli
-      return this.db.collection('groceries').doc(this.getHouseholdId());
     }
+    // GUEST / BELUM LOGIN: Jangan konek / jangan sinkron ke cloud sama sekali!
+    return null;
   },
 
   // Inisialisasi Firebase, Firestore & Auth
@@ -139,18 +138,21 @@ const FirebaseSync = {
       console.log(`[FirebaseSync] 👤 Login sebagai User: ${user.displayName || user.email} (UID: ${user.uid})`);
       this.updateStatusBadge('online', `Akun: ${user.displayName || user.email}`);
 
-      // Mulai realtime sync untuk dokumen user spesifik
+      // Mulai realtime sync HANYA untuk user yang sudah login
       this.startRealtimeListener();
 
       if (window.App && typeof App.showToast === 'function') {
         App.showToast(`👋 Masuk sebagai <strong>${user.displayName || user.email}</strong>`, 'success');
       }
     } else {
-      console.log('[FirebaseSync] Mode Tamu / Belum Login.');
-      this.updateStatusBadge('online', 'Mode Tamu (Lokal & Room)');
+      console.log('[FirebaseSync] Mode Lokal Perangkat (Belum Login). Data tersimpan mandiri di HP/Laptop ini saja.');
+      this.updateStatusBadge('offline', 'Mode Lokal Perangkat');
 
-      // Mulai listener untuk room troli biasa
-      this.startRealtimeListener();
+      // Hentikan listener realtime agar tidak terhubung ke perangkat lain
+      if (this.unsubscribeSnapshot) {
+        this.unsubscribeSnapshot();
+        this.unsubscribeSnapshot = null;
+      }
     }
   },
 
@@ -273,7 +275,7 @@ const FirebaseSync = {
     }
   },
 
-  // Realtime Snapshot Listener: Mengambil data per-user atau per-room
+  // Realtime Snapshot Listener: HANYA aktif jika user sudah login
   startRealtimeListener() {
     if (!this.db) return;
 
@@ -282,13 +284,16 @@ const FirebaseSync = {
       this.unsubscribeSnapshot = null;
     }
 
+    // JIKA BELUM LOGIN, JANGAN PERNAH PASANG LISTENER CLOUD
+    if (!this.currentUser || !this.currentUser.uid) {
+      console.log('[FirebaseSync] Belum login: Listener Cloud dimatikan (Penyimpanan Lokal Mandiri).');
+      return;
+    }
+
     const docRef = this.getTargetDocRef();
     if (!docRef) return;
 
-    const pathDesc = this.currentUser 
-      ? `users/${this.currentUser.uid} (${this.currentUser.email})` 
-      : `groceries/${this.getHouseholdId()}`;
-
+    const pathDesc = `users/${this.currentUser.uid} (${this.currentUser.email})`;
     console.log(`[FirebaseSync] Memulai realtime listener pada: ${pathDesc}`);
 
     this.unsubscribeSnapshot = docRef.onSnapshot({ includeMetadataChanges: false }, (doc) => {
@@ -366,9 +371,10 @@ const FirebaseSync = {
     });
   },
 
-  // Push Data Lokal ke Dokumen Firestore (Debounced 350ms)
+  // Push Data Lokal ke Dokumen Firestore (Debounced 350ms) - HANYA jika sudah LOGIN
   pushToCloud(immediate = false) {
     if (!this.db) return;
+    if (!this.currentUser || !this.currentUser.uid) return; // JANGAN PUSH JIKA BELUM LOGIN!
 
     if (this.syncDebounceTimer) {
       clearTimeout(this.syncDebounceTimer);
@@ -439,18 +445,21 @@ const FirebaseSync = {
     }
   },
 
-  // Trigger sync saat keranjang belanja berubah
+  // Trigger sync saat keranjang belanja berubah (Hanya jika user login)
   syncCart(items) {
+    if (!this.currentUser) return;
     this.pushToCloud(false);
   },
 
-  // Trigger sync saat batas budget berubah
+  // Trigger sync saat batas budget berubah (Hanya jika user login)
   syncBudget(cap) {
+    if (!this.currentUser) return;
     this.pushToCloud(false);
   },
 
-  // Trigger sync saat riwayat transaksi bertambah
+  // Trigger sync saat riwayat transaksi bertambah (Hanya jika user login)
   syncHistory(history) {
+    if (!this.currentUser) return;
     this.pushToCloud(true);
   },
 
