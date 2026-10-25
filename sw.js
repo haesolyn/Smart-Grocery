@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-grocery-v14';
+const CACHE_NAME = 'smart-grocery-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -25,7 +25,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-caching offline assets v14');
+      console.log('[SW] Pre-caching offline assets v15');
       return cache.addAll(ASSETS).catch(err => console.warn('[SW] Cache addAll warning:', err));
     }).then(() => self.skipWaiting())
   );

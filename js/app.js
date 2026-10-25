@@ -796,21 +796,26 @@ const App = {
     if (elSavings) elSavings.textContent = totals.totalSavings > 0 ? `-${this.formatRupiah(totals.totalSavings)}` : 'Rp 0';
     if (elFinal) elFinal.textContent = this.formatRupiah(totals.totalExpenditure);
 
+    const belanjaWrapper = document.querySelector('.belanja-layout-wrapper');
     if (items.length === 0) {
+      if (belanjaWrapper) belanjaWrapper.classList.add('is-empty');
       if (listContainer) {
+        listContainer.classList.add('is-empty');
         listContainer.innerHTML = `
-          <div class="empty-cart-state" style="padding: 36px 16px; text-align: center;">
-            <div style="margin-bottom: 14px;">
-              <img src="icons/app-logo.png?v=9.2" alt="Smart Grocery Logo" style="width: 76px; height: 76px; border-radius: 20px; box-shadow: 0 10px 28px rgba(0,0,0,0.35), 0 0 25px var(--color-safe-bg); border: 2px solid rgba(255,255,255,0.25); margin: 0 auto; display: block; object-fit: cover;">
+          <div class="empty-cart-card">
+            <img src="icons/app-logo.png?v=9.7" alt="Smart Grocery Logo" class="empty-cart-logo">
+            <div class="empty-cart-title">Troli Belanja Kosong</div>
+            <div class="empty-cart-subtitle">
+              Mulai catat barang belanjaan kamu untuk memantau batas aman anggaran belanja secara realtime.
             </div>
-            <div class="empty-cart-title" style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Troli Belanja Kosong</div>
-            <div class="empty-cart-subtitle" style="font-size: 13px; color: var(--text-muted); max-width: 290px; margin: 0 auto 18px; line-height: 1.5;">
-              Dorong troli dan ketuk tombol <strong>(+)</strong> di kanan bawah untuk mulai mencatat barang belanjaan kamu.
-            </div>
-            <button type="button" class="btn-primary" onclick="App.openItemModal(null)" style="margin: 0 auto; max-width: 220px;">
-              <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+            <button type="button" class="empty-cart-btn" onclick="App.openItemModal(null)">
+              <i data-lucide="plus"></i>
               <span>Mulai Belanja</span>
             </button>
+            <div class="empty-cart-hint">
+              <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+              <span>Atau tekan tombol <strong>(+)</strong> di pojok kanan bawah</span>
+            </div>
           </div>
         `;
       }
@@ -820,6 +825,8 @@ const App = {
       return;
     }
 
+    if (belanjaWrapper) belanjaWrapper.classList.remove('is-empty');
+    if (listContainer) listContainer.classList.remove('is-empty');
     if (summaryBox) summaryBox.style.display = 'block';
     if (!listContainer) return;
 
