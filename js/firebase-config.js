@@ -27,32 +27,6 @@ const FirebaseSync = {
   clientId: 'client_' + Math.random().toString(36).substring(2, 9),
   unsubscribeSnapshot: null,
   syncDebounceTimer: null,
-  HOUSEHOLD_KEY: 'sg_household_id',
-  DEFAULT_HOUSEHOLD: 'troli_utama',
-
-  // Ambil ID / Kode Sinkronisasi Ruang Tamu (Jika belum login)
-  getHouseholdId() {
-    let id = localStorage.getItem(this.HOUSEHOLD_KEY);
-    if (!id || id.trim() === '') {
-      id = this.DEFAULT_HOUSEHOLD;
-      localStorage.setItem(this.HOUSEHOLD_KEY, id);
-    }
-    return id.trim();
-  },
-
-  setHouseholdId(newId) {
-    if (!newId || newId.trim() === '') return false;
-    const cleanId = newId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
-    localStorage.setItem(this.HOUSEHOLD_KEY, cleanId);
-    console.log('[FirebaseSync] Household ID diubah ke:', cleanId);
-
-    // Restart snapshot listener jika sedang mode guest/ruang bersama
-    if (!this.currentUser) {
-      this.startRealtimeListener();
-    }
-    return cleanId;
-  },
-
   // Mendapatkan dokumen referensi Firestore saat ini (HANYA jika user sudah LOGIN Google)
   getTargetDocRef() {
     if (!this.db) return null;
@@ -463,33 +437,7 @@ const FirebaseSync = {
     this.pushToCloud(true);
   },
 
-  // Tes Koneksi / Ping Firestore
-  async testConnection() {
-    if (!this.db) {
-      return { success: false, message: 'Firebase belum terinisialisasi' };
-    }
 
-    const start = Date.now();
-    try {
-      this.updateStatusBadge('syncing', 'Mengetes koneksi Firestore...');
-      const pingRef = this.db.collection('groceries').doc('_ping_test');
-      await pingRef.set({
-        pingAt: firebase.firestore.FieldValue.serverTimestamp(),
-        clientId: this.clientId,
-        userEmail: this.currentUser ? this.currentUser.email : 'guest'
-      }, { merge: true });
-
-      const latency = Date.now() - start;
-      this.isConnected = true;
-      const target = this.currentUser ? `Akun ${this.currentUser.email}` : 'gro-pilot';
-      this.updateStatusBadge('online', `Terhubung (${latency}ms)`);
-      return { success: true, latency: latency, message: `Berhasil terhubung ke ${target} (${latency}ms)` };
-    } catch (err) {
-      this.isConnected = false;
-      this.updateStatusBadge('error', err.message);
-      return { success: false, error: err, message: `Gagal: ${err.message}` };
-    }
-  },
 
   // Update Status UI (Badge di header dan Modal)
   updateStatusBadge(status, message) {

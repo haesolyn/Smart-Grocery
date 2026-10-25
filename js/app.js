@@ -330,10 +330,6 @@ const App = {
 
   openCloudSyncModal() {
     const modal = document.getElementById('modal-cloud-sync');
-    const inputSyncCode = document.getElementById('input-sync-code');
-    if (inputSyncCode && window.FirebaseSync) {
-      inputSyncCode.value = FirebaseSync.getHouseholdId();
-    }
     if (modal) {
       modal.classList.add('active');
       SoundEngine.playTick();
@@ -579,66 +575,16 @@ const App = {
     // 14. Firebase Cloud Sync Modal
     const btnCloseCloud = document.getElementById('btn-close-cloud-sync');
     const btnDoneCloud = document.getElementById('btn-done-cloud-sync');
-    const btnTestCloud = document.getElementById('btn-test-cloud-sync');
-    const btnManualPush = document.getElementById('btn-manual-push-cloud');
-    const btnCopySyncCode = document.getElementById('btn-copy-sync-code');
-    const btnApplySyncCode = document.getElementById('btn-apply-sync-code');
-    const inputSyncCode = document.getElementById('input-sync-code');
 
     if (btnCloseCloud) btnCloseCloud.addEventListener('click', () => this.closeCloudSyncModal());
     if (btnDoneCloud) btnDoneCloud.addEventListener('click', () => this.closeCloudSyncModal());
 
-    if (btnTestCloud) {
-      btnTestCloud.addEventListener('click', async () => {
-        btnTestCloud.disabled = true;
-        btnTestCloud.innerHTML = '<span class="spinner-inline"></span><span>Menguji...</span>';
-        if (window.FirebaseSync) {
-          const res = await FirebaseSync.testConnection();
-          if (res.success) {
-            this.showToast(`🟢 ${res.message}`, 'success');
-            SoundEngine.playSuccessChime();
-          } else {
-            this.showToast(`❌ ${res.message}`, 'error');
-            SoundEngine.playAlertBeep();
-          }
-        }
-        btnTestCloud.disabled = false;
-        btnTestCloud.innerHTML = '<i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i><span>Tes Koneksi Firebase</span>';
-        this.initLucideIcons();
-      });
-    }
-
-    if (btnManualPush) {
-      btnManualPush.addEventListener('click', () => {
-        if (window.FirebaseSync) {
-          FirebaseSync.pushToCloud(true);
-          this.showToast('☁️ Sinkronisasi ke Firestore dijalankan', 'success');
-          SoundEngine.playSuccessChime();
-        }
-      });
-    }
-
-    if (btnCopySyncCode && inputSyncCode) {
-      btnCopySyncCode.addEventListener('click', () => {
-        const val = inputSyncCode.value.trim() || 'troli_utama';
-        navigator.clipboard.writeText(val).then(() => {
-          this.showToast('Kode troli disalin ke clipboard!');
-          SoundEngine.playTick();
-        }).catch(() => {
-          inputSyncCode.select();
-          document.execCommand('copy');
-          this.showToast('Kode troli disalin!');
-        });
-      });
-    }
-
-    if (btnApplySyncCode && inputSyncCode) {
-      btnApplySyncCode.addEventListener('click', () => {
-        const val = inputSyncCode.value.trim();
-        if (val && window.FirebaseSync) {
-          const newCode = FirebaseSync.setHouseholdId(val);
-          this.showToast(`Ruang troli diubah ke: <strong>${newCode}</strong>`, 'success');
-          SoundEngine.playSuccessChime();
+    // Tutup modal cloud sync saat ketuk overlay di luar
+    const modalCloudOverlay = document.getElementById('modal-cloud-sync');
+    if (modalCloudOverlay) {
+      modalCloudOverlay.addEventListener('click', (e) => {
+        if (e.target === modalCloudOverlay) {
+          this.closeCloudSyncModal();
         }
       });
     }
