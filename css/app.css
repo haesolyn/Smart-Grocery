@@ -2145,28 +2145,6 @@ body {
 /* ==========================================================================
    RIWAYAT (HISTORY) TAB VIEW (F-06)
    ========================================================================== */
-.history-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-@media (max-width: 480px) {
-  .history-stats-grid {
-    gap: 8px;
-  }
-  .history-stats-grid .stat-box {
-    padding: 10px 8px;
-    text-align: center;
-  }
-  .history-stats-grid .stat-box .title {
-    font-size: 10px;
-  }
-  .history-stats-grid .stat-box .number {
-    font-size: 13px;
-  }
-}
 
 .history-list {
   display: flex;

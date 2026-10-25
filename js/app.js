@@ -1547,17 +1547,9 @@ const App = {
     const statAvg = document.getElementById('stat-avg-spent');
     const statSaved = document.getElementById('stat-total-saved');
 
-    // Riwayat summary banner stats
-    const histStatCount = document.getElementById('hist-stat-count');
-    const histStatSpent = document.getElementById('hist-stat-total-spent');
-    const histStatSavings = document.getElementById('hist-stat-total-savings');
-
     if (historyList.length === 0) {
       if (statAvg) statAvg.textContent = 'Rp 0';
       if (statSaved) statSaved.textContent = 'Rp 0';
-      if (histStatCount) histStatCount.textContent = '0 Sesi';
-      if (histStatSpent) histStatSpent.textContent = 'Rp 0';
-      if (histStatSavings) histStatSavings.textContent = 'Rp 0';
       return;
     }
 
@@ -1571,10 +1563,6 @@ const App = {
     const avg = totalSpent / historyList.length;
     if (statAvg) statAvg.textContent = this.formatRupiah(avg);
     if (statSaved) statSaved.textContent = this.formatRupiah(totalSaved);
-
-    if (histStatCount) histStatCount.textContent = `${historyList.length} Sesi`;
-    if (histStatSpent) histStatSpent.textContent = this.formatRupiah(totalSpent);
-    if (histStatSavings) histStatSavings.textContent = this.formatRupiah(totalSaved);
   },
 
   // Toast Notification (Menyesuaikan Tema Dinamis)
