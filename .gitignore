@@ -1,0 +1,11 @@
+# Firebase cache
+.firebase/
+.firebaserc.bak
+
+# Node & dependencies
+node_modules/
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db

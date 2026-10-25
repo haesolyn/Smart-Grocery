@@ -32,16 +32,6 @@
   <!-- MOBILE DEVICE FRAME CONTAINER (Centered max-width 430px on desktop) -->
   <div id="mobile-frame">
 
-    <!-- SIMULATED STATUS BAR (Native Mobile Feel) -->
-    <div class="status-bar" id="status-bar">
-      <span class="status-time" id="clock-display">09:41</span>
-      <div class="status-bar-icons">
-        <i data-lucide="signal" style="width: 14px; height: 14px;"></i>
-        <i data-lucide="wifi" style="width: 14px; height: 14px;"></i>
-        <i data-lucide="battery" style="width: 16px; height: 16px;"></i>
-      </div>
-    </div>
-
     <!-- APP HEADER -->
     <header class="app-header">
       <div class="header-brand">
@@ -50,11 +40,17 @@
           <h1>Smart Grocery</h1>
           <div class="subtitle">
             <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
-            <span>Budget Safety Cap</span>
+            <span>Safety Tracker</span>
           </div>
         </div>
       </div>
       <div class="header-actions">
+        <!-- User Account & Cloud Sync Button -->
+        <button type="button" class="icon-btn user-header-btn" id="btn-header-auth" title="Akun Pengguna Google & Cloud Sync" aria-label="User Account">
+          <div class="user-avatar-wrap" id="header-user-avatar">
+            <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+          </div>
+        </button>
         <!-- Theme Palette Switcher Button -->
         <button type="button" class="icon-btn" id="btn-open-theme-modal" title="Pilihan Tema Warna" aria-label="Theme Color">
           <i data-lucide="palette" style="width: 18px; height: 18px;"></i>
@@ -68,34 +64,36 @@
 
     <!-- F-05: PENGENDALI ANGGARAN (SAFETY CAP) WIDGET STICKY -->
     <div class="safety-cap-card state-safe" id="safety-cap-widget">
-      <div class="safety-cap-header">
-        <div class="safety-badge" id="safety-badge">
-          <i data-lucide="shield-check" id="safety-badge-icon" style="width: 12px; height: 12px;"></i>
-          <span id="safety-badge-text">Anggaran Aman</span>
-        </div>
-        <button type="button" class="safety-limit-btn" id="btn-open-budget-modal">
-          <span>Limit: <strong id="cap-display-text">Rp 500.000</strong></span>
-          <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
-        </button>
-      </div>
-
-      <div class="safety-numbers">
-        <div>
+      <div class="safety-row-top">
+        <div class="safety-spent-group">
+          <span class="safety-small-label">Total Belanja</span>
           <div class="total-spent" id="cart-total-spent">Rp 0</div>
         </div>
-        <div class="budget-limit-text">
-          Sisa: <span id="cart-remaining-budget">Rp 500.000</span>
+        <div class="safety-right-group">
+          <button type="button" class="safety-limit-btn" id="btn-open-budget-modal" title="Ubah batas anggaran">
+            <span>Limit: <strong id="cap-display-text">Rp 500.000</strong></span>
+            <i data-lucide="chevron-right" style="width: 12px; height: 12px;"></i>
+          </button>
+          <div class="safety-badge" id="safety-badge">
+            <i data-lucide="shield-check" id="safety-badge-icon" style="width: 12px; height: 12px;"></i>
+            <span id="safety-badge-text">Anggaran Aman</span>
+          </div>
         </div>
       </div>
 
-      <!-- Realtime Visual Progress Bar -->
+      <!-- Realtime Visual Progress Bar (F-05) -->
       <div class="safety-bar-wrap">
         <div class="safety-bar-fill" id="safety-bar-fill" style="width: 0%;"></div>
       </div>
 
-      <div class="safety-message" id="safety-message">
-        <i data-lucide="check-circle-2" id="safety-msg-icon" style="width: 13px; height: 13px;"></i>
-        <span id="safety-msg-text">Troli dalam kendali aman anak rantau</span>
+      <div class="safety-row-bottom">
+        <div class="budget-limit-text">
+          Sisa: <span id="cart-remaining-budget">Rp 500.000</span>
+        </div>
+        <div class="safety-message" id="safety-message">
+          <i data-lucide="check-circle-2" id="safety-msg-icon" style="width: 12px; height: 12px;"></i>
+          <span id="safety-msg-text">Troli dalam kendali aman</span>
+        </div>
       </div>
     </div>
 
@@ -117,10 +115,40 @@
       <section class="tab-view active" id="view-belanja">
         <div class="view-header-row">
           <div class="view-title">
-            <i data-lucide="shopping-cart" style="width: 20px; height: 20px; color: var(--color-safe-light);"></i>
+            <i data-lucide="shopping-cart" style="width: 18px; height: 18px; color: var(--color-safe-light);"></i>
             <span>Isi Troli Belanja</span>
           </div>
           <span class="view-badge-pill" id="cart-count-badge">0 Barang</span>
+        </div>
+
+        <!-- GOOGLE CLOUD STRIP -->
+        <div class="cloud-status-strip" id="home-auth-guest">
+          <div class="strip-left">
+            <span class="google-mini-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+            </span>
+            <span class="strip-text">Simpan data troli di akun Google</span>
+          </div>
+          <button type="button" class="btn-strip-login" id="btn-home-google-login">
+            <span>Masuk</span>
+          </button>
+        </div>
+
+        <!-- LOGGED-IN CHIP -->
+        <div class="cloud-status-strip logged-in" id="home-auth-user" style="display: none;">
+          <div class="strip-left">
+            <span class="strip-online-dot"></span>
+            <span class="strip-user-name user-display-name">Nama User</span>
+            <span class="strip-status-tag">• Cloud Aktif</span>
+          </div>
+          <button type="button" class="btn-strip-manage" id="btn-home-open-account">
+            <span>Akun</span>
+          </button>
         </div>
 
         <!-- Cart Items List (F-01, F-02, F-03, F-04) -->
@@ -493,6 +521,136 @@
     </div>
 
     <!-- ===================================================================
+         MODAL BOTTOM SHEET: FIREBASE CLOUD SYNC (gro-pilot)
+         =================================================================== -->
+    <div class="modal-overlay" id="modal-cloud-sync">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div class="sheet-title">
+            <i data-lucide="cloud" style="color: var(--accent-primary);"></i>
+            <span>Firebase Cloud & Akun</span>
+          </div>
+          <button type="button" class="sheet-close-btn" id="btn-close-cloud-sync">
+            <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
+
+        <!-- GOOGLE AUTHENTICATION CARD (Per-User Storage) -->
+        <div class="auth-card" id="auth-card">
+          <!-- Logged Out View -->
+          <div class="auth-logged-out" id="auth-logged-out">
+            <div class="auth-prompt">
+              <div class="auth-icon-badge">
+                <svg viewBox="0 0 24 24" width="22" height="22">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+              </div>
+              <div class="auth-prompt-text">
+                <div class="auth-title">Penyimpanan Per-User (Akun Google)</div>
+                <div class="auth-desc">Login dengan akun Google agar troli belanja & riwayat Anda tersimpan permanen khusus di akun Anda.</div>
+              </div>
+            </div>
+            <button type="button" class="btn-google-login" id="btn-google-login">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Masuk dengan Google</span>
+            </button>
+          </div>
+
+          <!-- Logged In View -->
+          <div class="auth-logged-in" id="auth-logged-in" style="display: none;">
+            <div class="user-profile-header">
+              <div class="user-avatar-container">
+                <img class="user-avatar-img user-profile-photo" src="" alt="User" onerror="this.style.display='none'">
+                <div class="user-avatar-fallback">U</div>
+              </div>
+              <div class="user-details">
+                <div class="user-name user-display-name">Nama Pengguna</div>
+                <div class="user-email user-display-email">email@gmail.com</div>
+                <span class="user-tag-verified">
+                  <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
+                  <span>Akun Google Terhubung</span>
+                </span>
+              </div>
+            </div>
+            <div class="user-storage-note">
+              🔒 <strong>Penyimpanan Pribadi Terisolasi:</strong> Data troli belanja, batas limit anggaran, dan riwayat Anda disimpan khusus di dokumen cloud: <code>users/<span class="user-uid-short">...</span></code>
+            </div>
+            <button type="button" class="btn-logout" id="btn-logout">
+              <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+              <span>Keluar (Logout)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="cloud-status-card">
+          <div class="cloud-status-header">
+            <div class="cloud-brand-tag">
+              <i data-lucide="database" style="width: 14px; height: 14px;"></i>
+              <span>Project: <strong>gro-pilot</strong></span>
+            </div>
+            <span class="cloud-status-badge online" id="cloud-status-text">Terhubung</span>
+          </div>
+          <div class="cloud-meta-row">
+            <span class="cloud-meta-label">Basis Data:</span>
+            <span class="cloud-meta-val">Cloud Firestore (Realtime)</span>
+          </div>
+          <div class="cloud-meta-row">
+            <span class="cloud-meta-label">Status Caching:</span>
+            <span class="cloud-meta-val">Offline-first (LocalStorage aman)</span>
+          </div>
+          <div class="cloud-meta-sub" id="cloud-last-sync-time">
+            Terakhir sinkron: Otomatis saat ada perubahan
+          </div>
+        </div>
+
+        <!-- Household / Room Sync Code -->
+        <div class="form-group" style="margin-top: 14px; margin-bottom: 14px;">
+          <label class="form-label">
+            <span>Kode Ruang Troli (Sync Antar HP & Laptop)</span>
+          </label>
+          <div class="sync-code-input-wrap">
+            <input type="text" id="input-sync-code" class="form-input sync-code-field" placeholder="troli_utama" value="troli_utama">
+            <button type="button" class="btn-sync-action" id="btn-apply-sync-code" title="Terapkan Kode">
+              <span>Pakai</span>
+            </button>
+            <button type="button" class="btn-sync-action secondary" id="btn-copy-sync-code" title="Salin Kode">
+              <i data-lucide="copy" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+          <p class="form-helper" style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">
+            Masukkan kode yang sama di HP dan laptop agar troli belanja terhubung bersama.
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="cloud-actions-grid">
+          <button type="button" class="btn-secondary" id="btn-test-cloud-sync" style="font-size: 13px;">
+            <i data-lucide="refresh-cw" style="width: 15px; height: 15px;"></i>
+            <span>Tes Koneksi Firebase</span>
+          </button>
+          <button type="button" class="btn-primary" id="btn-manual-push-cloud" style="font-size: 13px;">
+            <i data-lucide="upload" style="width: 15px; height: 15px;"></i>
+            <span>Sinkronkan Sekarang</span>
+          </button>
+        </div>
+
+        <button type="button" class="btn-secondary" id="btn-done-cloud-sync" style="width: 100%; margin-top: 12px;">
+          <span>Selesai</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================================================================
          MODAL BOTTOM SHEET: PILIHAN TEMA & WARNA TAMPILAN
          =================================================================== -->
     <div class="modal-overlay" id="modal-theme">
@@ -589,6 +747,12 @@
     </div>
 
   </div> <!-- /#mobile-frame -->
+
+  <!-- Firebase App, Auth & Cloud Firestore (Compat SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
 
   <!-- Application Logic Scripts -->
   <script src="js/sound.js"></script>

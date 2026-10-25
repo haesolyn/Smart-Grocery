@@ -24,6 +24,9 @@ const BudgetSafetyCap = {
   setCap(newCap) {
     const cap = Math.max(10000, parseFloat(newCap) || this.DEFAULT_CAP);
     localStorage.setItem(this.STORAGE_KEY, cap);
+    if (window.FirebaseSync && typeof FirebaseSync.syncBudget === 'function') {
+      FirebaseSync.syncBudget(cap);
+    }
     return cap;
   },
 

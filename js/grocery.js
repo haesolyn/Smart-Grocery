@@ -73,6 +73,9 @@ const GroceryEngine = {
 
   saveItems(items) {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
+    if (window.FirebaseSync && typeof FirebaseSync.syncCart === 'function') {
+      FirebaseSync.syncCart(items);
+    }
   },
 
   /**

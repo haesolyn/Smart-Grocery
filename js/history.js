@@ -61,6 +61,9 @@ const ShoppingHistory = {
 
   saveHistory(list) {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+    if (window.FirebaseSync && typeof FirebaseSync.syncHistory === 'function') {
+      FirebaseSync.syncHistory(list);
+    }
   },
 
   /**

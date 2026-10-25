@@ -22,6 +22,10 @@ const App = {
     SoundEngine.init();
     PWAHandler.init();
 
+    if (window.FirebaseSync && typeof FirebaseSync.init === 'function') {
+      FirebaseSync.init();
+    }
+
     this.initTheme();
     this.initClock();
     this.initLucideIcons();
@@ -93,7 +97,13 @@ const App = {
       'palette': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
       'moon': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
       'sun': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
-      'sliders': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>'
+      'sliders': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>',
+      'cloud': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',
+      'cloud-off': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"/><path d="M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 2.69-8.118"/><path d="M22.61 16.9A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0-4 7h1.08"/></svg>',
+      'refresh-cw': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
+      'database': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>',
+      'user': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      'log-out': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>'
     };
 
     document.querySelectorAll('[data-lucide]').forEach(el => {
@@ -298,6 +308,25 @@ const App = {
 
   closeThemeModal() {
     const modal = document.getElementById('modal-theme');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+  },
+
+  openCloudSyncModal() {
+    const modal = document.getElementById('modal-cloud-sync');
+    const inputSyncCode = document.getElementById('input-sync-code');
+    if (inputSyncCode && window.FirebaseSync) {
+      inputSyncCode.value = FirebaseSync.getHouseholdId();
+    }
+    if (modal) {
+      modal.classList.add('active');
+      SoundEngine.playTick();
+    }
+  },
+
+  closeCloudSyncModal() {
+    const modal = document.getElementById('modal-cloud-sync');
     if (modal) {
       modal.classList.remove('active');
     }
@@ -516,6 +545,148 @@ const App = {
         reader.readAsText(file);
       });
     }
+
+    // 14. Firebase Cloud Sync Modal
+    const btnOpenCloud = document.getElementById('btn-open-cloud-sync');
+    const btnCloseCloud = document.getElementById('btn-close-cloud-sync');
+    const btnDoneCloud = document.getElementById('btn-done-cloud-sync');
+    const btnTestCloud = document.getElementById('btn-test-cloud-sync');
+    const btnManualPush = document.getElementById('btn-manual-push-cloud');
+    const btnCopySyncCode = document.getElementById('btn-copy-sync-code');
+    const btnApplySyncCode = document.getElementById('btn-apply-sync-code');
+    const inputSyncCode = document.getElementById('input-sync-code');
+
+    if (btnOpenCloud) btnOpenCloud.addEventListener('click', () => this.openCloudSyncModal());
+    if (btnCloseCloud) btnCloseCloud.addEventListener('click', () => this.closeCloudSyncModal());
+    if (btnDoneCloud) btnDoneCloud.addEventListener('click', () => this.closeCloudSyncModal());
+
+    if (btnTestCloud) {
+      btnTestCloud.addEventListener('click', async () => {
+        btnTestCloud.disabled = true;
+        btnTestCloud.innerHTML = '<span class="spinner-inline"></span><span>Menguji...</span>';
+        if (window.FirebaseSync) {
+          const res = await FirebaseSync.testConnection();
+          if (res.success) {
+            this.showToast(`🟢 ${res.message}`, 'success');
+            SoundEngine.playSuccessChime();
+          } else {
+            this.showToast(`❌ ${res.message}`, 'error');
+            SoundEngine.playAlertBeep();
+          }
+        }
+        btnTestCloud.disabled = false;
+        btnTestCloud.innerHTML = '<i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i><span>Tes Koneksi Firebase</span>';
+        this.initLucideIcons();
+      });
+    }
+
+    if (btnManualPush) {
+      btnManualPush.addEventListener('click', () => {
+        if (window.FirebaseSync) {
+          FirebaseSync.pushToCloud(true);
+          this.showToast('☁️ Sinkronisasi ke Firestore dijalankan', 'success');
+          SoundEngine.playSuccessChime();
+        }
+      });
+    }
+
+    if (btnCopySyncCode && inputSyncCode) {
+      btnCopySyncCode.addEventListener('click', () => {
+        const val = inputSyncCode.value.trim() || 'troli_utama';
+        navigator.clipboard.writeText(val).then(() => {
+          this.showToast('Kode troli disalin ke clipboard!');
+          SoundEngine.playTick();
+        }).catch(() => {
+          inputSyncCode.select();
+          document.execCommand('copy');
+          this.showToast('Kode troli disalin!');
+        });
+      });
+    }
+
+    if (btnApplySyncCode && inputSyncCode) {
+      btnApplySyncCode.addEventListener('click', () => {
+        const val = inputSyncCode.value.trim();
+        if (val && window.FirebaseSync) {
+          const newCode = FirebaseSync.setHouseholdId(val);
+          this.showToast(`Ruang troli diubah ke: <strong>${newCode}</strong>`, 'success');
+          SoundEngine.playSuccessChime();
+        }
+      });
+    }
+
+    // 15. Google Auth Buttons
+    const btnHeaderAuth = document.getElementById('btn-header-auth');
+    const btnGoogleLogin = document.getElementById('btn-google-login');
+    const btnLogout = document.getElementById('btn-logout');
+
+    if (btnHeaderAuth) {
+      btnHeaderAuth.addEventListener('click', () => {
+        this.openCloudSyncModal();
+      });
+    }
+
+    if (btnGoogleLogin) {
+      btnGoogleLogin.addEventListener('click', async () => {
+        if (!window.FirebaseSync) return;
+        btnGoogleLogin.disabled = true;
+        const originalContent = btnGoogleLogin.innerHTML;
+        btnGoogleLogin.innerHTML = '<span class="spinner-inline" style="border-top-color: #4285F4;"></span><span>Menghubungkan ke Google...</span>';
+        try {
+          await FirebaseSync.loginWithGoogle();
+          SoundEngine.playSuccessChime();
+        } catch (err) {
+          console.error('Login error:', err);
+          if (err.code !== 'auth/popup-closed-by-user') {
+            this.showToast(`Gagal login Google: ${err.message}`, 'error');
+            SoundEngine.playAlertBeep();
+          }
+        } finally {
+          btnGoogleLogin.disabled = false;
+          btnGoogleLogin.innerHTML = originalContent;
+        }
+      });
+    }
+
+    const btnHomeGoogleLogin = document.getElementById('btn-home-google-login');
+    if (btnHomeGoogleLogin) {
+      btnHomeGoogleLogin.addEventListener('click', async () => {
+        if (!window.FirebaseSync) return;
+        btnHomeGoogleLogin.disabled = true;
+        const origText = btnHomeGoogleLogin.innerHTML;
+        btnHomeGoogleLogin.innerHTML = '<span>Login...</span>';
+        try {
+          await FirebaseSync.loginWithGoogle();
+          SoundEngine.playSuccessChime();
+        } catch (err) {
+          console.error('Login error:', err);
+          if (err.code !== 'auth/popup-closed-by-user') {
+            this.showToast(`Gagal login Google: ${err.message}`, 'error');
+            SoundEngine.playAlertBeep();
+          }
+        } finally {
+          btnHomeGoogleLogin.disabled = false;
+          btnHomeGoogleLogin.innerHTML = origText;
+        }
+      });
+    }
+
+    const btnHomeOpenAccount = document.getElementById('btn-home-open-account');
+    if (btnHomeOpenAccount) {
+      btnHomeOpenAccount.addEventListener('click', () => {
+        this.openCloudSyncModal();
+      });
+    }
+
+    if (btnLogout) {
+      btnLogout.addEventListener('click', async () => {
+        if (!window.FirebaseSync) return;
+        if (confirm('Keluar dari akun Google? Data belanja akun Anda akan tetap aman di cloud.')) {
+          await FirebaseSync.logout();
+          SoundEngine.playTick();
+        }
+      });
+    }
   },
 
   // Setup input listener untuk perhitungan realtime dan autocomplete
@@ -688,10 +859,10 @@ const App = {
       let discountBadgeHtml = '';
       if (item.totalDiscount > 0) {
         discountBadgeHtml = `
-          <div class="item-discount-pill">
-            <i data-lucide="tag" style="width: 12px; height: 12px;"></i>
-            <span>${item.discountInfo.displayText} (Hemat ${this.formatRupiah(item.totalDiscount)})</span>
-          </div>
+          <span class="item-discount-pill" title="${item.discountInfo.displayText}">
+            <i data-lucide="tag" style="width: 11px; height: 11px;"></i>
+            <span>${item.discountInfo.displayText}</span>
+          </span>
         `;
       }
 
@@ -699,31 +870,29 @@ const App = {
       const unitText = item.unit || 'pcs';
 
       card.innerHTML = `
-        <div class="grocery-card-header">
+        <div class="grocery-card-top">
           <div class="item-main-info" onclick="App.openItemModal('${item.id}')" style="cursor: pointer;">
-            <div class="item-category-tag">
-              <span>${cat.icon}</span>
-              <span>${cat.name}</span>
+            <div class="item-name-row">
+              <span class="item-cat-emoji">${cat.icon}</span>
+              <span class="item-name">${item.name}</span>
             </div>
-            <div class="item-name">${item.name}</div>
+            <div class="item-unit-tag">@ ${this.formatRupiah(item.unitPrice)} / ${unitText}</div>
           </div>
           <button type="button" class="item-delete-btn" title="Hapus Barang" onclick="App.deleteCartItem('${item.id}')">
-            <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+            <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
           </button>
         </div>
 
-        <!-- F-04: Komparator Harga vs Bulan Lalu Badge -->
-        <div>
-          <span class="comparator-badge ${comp.badgeClass}" onclick="App.openPriceDetail('${item.name}', ${item.unitPrice}, '${item.unit}')" title="Ketuk untuk melihat detail tren harga">
-            <span>${comp.arrow}</span>
-            <span>${comp.label}</span>
+        <!-- F-04 Komparator & F-03 Diskon Badges Row -->
+        <div class="item-badges-row">
+          <span class="comparator-badge ${comp.badgeClass}" onclick="App.openPriceDetail('${item.name}', ${item.unitPrice}, '${item.unit}')" title="Detail tren harga vs bulan lalu">
+            <span class="comp-arrow">${comp.arrow}</span>
+            <span class="comp-label">${comp.label}</span>
           </span>
+          ${discountBadgeHtml}
         </div>
 
-        <!-- F-03: Diskon Bertingkat Pill jika ada -->
-        ${discountBadgeHtml}
-
-        <!-- Card Footer: Stepper Ergonomis & Total Harga -->
+        <!-- Card Footer: Stepper & Realtime Total (F-02) -->
         <div class="grocery-card-footer">
           <!-- Stepper Kuantitas (Ramah Jempol) -->
           <div class="stepper-control">
@@ -737,7 +906,6 @@ const App = {
 
           <!-- Total Harga Realtime (F-02) -->
           <div class="item-price-column" onclick="App.openItemModal('${item.id}')" style="cursor: pointer;">
-            <div class="item-unit-calc">@ ${this.formatRupiah(item.unitPrice)} / ${unitText}</div>
             ${item.totalDiscount > 0 ? `<div class="item-original-striked">${this.formatRupiah(item.rawSubtotal)}</div>` : ''}
             <div class="item-final-price">${this.formatRupiah(item.finalPrice)}</div>
           </div>
