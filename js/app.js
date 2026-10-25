@@ -781,6 +781,11 @@ const App = {
       navBadge.textContent = totals.totalCount;
       navBadge.style.display = totals.totalCount > 0 ? 'flex' : 'none';
     }
+    const desktopNavBadge = document.getElementById('desktop-cart-badge');
+    if (desktopNavBadge) {
+      desktopNavBadge.textContent = totals.totalCount;
+      desktopNavBadge.style.display = totals.totalCount > 0 ? 'inline-flex' : 'none';
+    }
 
     // Update Summary Box
     const elSubtotal = document.getElementById('summary-subtotal');
