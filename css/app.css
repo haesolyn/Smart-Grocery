@@ -1018,7 +1018,10 @@ body {
   }
 
   .history-list.is-empty {
-    display: block !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
   }
 }
 
@@ -2153,7 +2156,10 @@ body {
 }
 
 .history-list.is-empty {
-  display: block !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
 }
 
 .history-card {

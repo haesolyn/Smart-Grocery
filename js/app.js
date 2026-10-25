@@ -1382,10 +1382,20 @@ const App = {
     if (historyList.length === 0) {
       container.classList.add('is-empty');
       container.innerHTML = `
-        <div class="empty-cart-state" style="width: 100%; grid-column: 1 / -1;">
-          <div class="empty-cart-icon"><i data-lucide="receipt" style="width: 32px; height: 32px;"></i></div>
+        <div class="empty-cart-card" style="width: 100%; max-width: 460px; margin: 20px auto; grid-column: 1 / -1;">
+          <img src="icons/app-logo.png?v=10.0" alt="Smart Grocery Logo" class="empty-cart-logo">
           <div class="empty-cart-title">Belum Ada Riwayat Belanja</div>
-          <div class="empty-cart-subtitle">Selesaikan transaksi belanja di supermarket untuk menyimpan riwayat dan data pembanding.</div>
+          <div class="empty-cart-subtitle">
+            Selesaikan transaksi belanja di supermarket untuk menyimpan riwayat dan data pembanding harga acuan.
+          </div>
+          <button type="button" class="empty-cart-btn" onclick="App.switchTab('view-belanja')">
+            <i data-lucide="shopping-cart"></i>
+            <span>Mulai Belanja</span>
+          </button>
+          <div class="empty-cart-hint">
+            <i data-lucide="receipt" style="width: 13px; height: 13px;"></i>
+            <span>Riwayat tersimpan otomatis saat kamu menekan tombol "Selesai Belanja"</span>
+          </div>
         </div>
       `;
       this.initLucideIcons();
