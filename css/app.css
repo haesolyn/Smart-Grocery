@@ -4,76 +4,26 @@
    Glassmorphism, High Ergonomic Mobile Touch Targets (>=48px), Max-Width 430px
    ========================================================================== */
 
-:root, [data-theme-color="emerald"] {
-  /* Default: Emerald Fresh */
+:root {
+  /* Default Colors: Emerald Fresh */
   --accent-primary: #10b981;
   --accent-primary-dark: #059669;
   --color-safe: #10b981;
   --color-safe-light: #34d399;
-  --color-safe-bg: rgba(16, 185, 129, 0.12);
-  --color-safe-border: rgba(16, 185, 129, 0.3);
+  --color-safe-bg: rgba(16, 185, 129, 0.14);
+  --color-safe-border: rgba(16, 185, 129, 0.35);
   --border-focus: #10b981;
-  --shadow-glow-safe: 0 0 20px rgba(16, 185, 129, 0.25);
-}
+  --shadow-glow-safe: 0 0 22px rgba(16, 185, 129, 0.28);
 
-[data-theme-color="cyan"] {
-  /* Theme: Ocean Cyan */
-  --accent-primary: #06b6d4;
-  --accent-primary-dark: #0891b2;
-  --color-safe: #06b6d4;
-  --color-safe-light: #38bdf8;
-  --color-safe-bg: rgba(6, 182, 212, 0.12);
-  --color-safe-border: rgba(6, 182, 212, 0.3);
-  --border-focus: #06b6d4;
-  --shadow-glow-safe: 0 0 20px rgba(6, 182, 212, 0.25);
-}
-
-[data-theme-color="violet"] {
-  /* Theme: Amethyst Violet */
-  --accent-primary: #8b5cf6;
-  --accent-primary-dark: #7c3aed;
-  --color-safe: #8b5cf6;
-  --color-safe-light: #a78bfa;
-  --color-safe-bg: rgba(139, 92, 246, 0.12);
-  --color-safe-border: rgba(139, 92, 246, 0.3);
-  --border-focus: #8b5cf6;
-  --shadow-glow-safe: 0 0 20px rgba(139, 92, 246, 0.25);
-}
-
-[data-theme-color="amber"] {
-  /* Theme: Sunset Amber */
-  --accent-primary: #f59e0b;
-  --accent-primary-dark: #d97706;
-  --color-safe: #f59e0b;
-  --color-safe-light: #fbbf24;
-  --color-safe-bg: rgba(245, 158, 11, 0.12);
-  --color-safe-border: rgba(245, 158, 11, 0.3);
-  --border-focus: #f59e0b;
-  --shadow-glow-safe: 0 0 20px rgba(245, 158, 11, 0.25);
-}
-
-[data-theme-color="rose"] {
-  /* Theme: Rose Berry */
-  --accent-primary: #f43f5e;
-  --accent-primary-dark: #e11d48;
-  --color-safe: #f43f5e;
-  --color-safe-light: #fb7185;
-  --color-safe-bg: rgba(244, 63, 94, 0.12);
-  --color-safe-border: rgba(244, 63, 94, 0.3);
-  --border-focus: #f43f5e;
-  --shadow-glow-safe: 0 0 20px rgba(244, 63, 94, 0.25);
-}
-
-:root {
-  /* Dark Mode Palette (Default) */
+  /* Dark Mode Surfaces (Default) */
   --bg-desktop: #07090e;
   --bg-app: #0d121d;
   --bg-surface: #151c2c;
   --bg-surface-elevated: #1e283d;
-  --bg-surface-glass: rgba(21, 28, 44, 0.85);
+  --bg-surface-glass: rgba(21, 28, 44, 0.88);
   --border-subtle: rgba(255, 255, 255, 0.08);
 
-  /* Safety Cap Colors */
+  /* Safety Cap Alert Colors */
   --color-warn: #f59e0b;
   --color-warn-light: #fbbf24;
   --color-warn-bg: rgba(245, 158, 11, 0.15);
@@ -106,29 +56,327 @@
   --shadow-glow-danger: 0 0 25px rgba(239, 68, 68, 0.4);
 }
 
-/* Light Mode Overrides */
-[data-theme-mode="light"] {
-  --bg-desktop: #cbd5e1;
-  --bg-app: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f1f5f9;
-  --bg-surface-glass: rgba(255, 255, 255, 0.92);
-  --border-subtle: rgba(0, 0, 0, 0.08);
+/* ==========================================================================
+   THEME COLOR DEFINITIONS (Dark & Light Atmosphere Per Theme)
+   ========================================================================== */
 
+/* 1. EMERALD FRESH */
+[data-theme-color="emerald"] {
+  --accent-primary: #10b981;
+  --accent-primary-dark: #059669;
+  --color-safe: #10b981;
+  --color-safe-light: #34d399;
+  --color-safe-bg: rgba(16, 185, 129, 0.14);
+  --color-safe-border: rgba(16, 185, 129, 0.35);
+  --border-focus: #10b981;
+  --shadow-glow-safe: 0 0 22px rgba(16, 185, 129, 0.28);
+  --bg-desktop: #070e0a;
+  --bg-app: #0c1611;
+  --bg-surface: #13221b;
+  --bg-surface-elevated: #1a2f26;
+  --bg-surface-glass: rgba(19, 34, 27, 0.88);
+}
+[data-theme-color="emerald"][data-theme-mode="light"] {
+  --bg-desktop: #d1fae5;
+  --bg-app: #ecfdf5;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #dcfce7;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(16, 185, 129, 0.2);
+}
+
+/* 2. PASTEL MINT (Soft Sage & Mint) */
+[data-theme-color="pastel-mint"] {
+  --accent-primary: #34d399;
+  --accent-primary-dark: #10b981;
+  --color-safe: #34d399;
+  --color-safe-light: #6ee7b7;
+  --color-safe-bg: rgba(52, 211, 153, 0.16);
+  --color-safe-border: rgba(52, 211, 153, 0.38);
+  --border-focus: #34d399;
+  --shadow-glow-safe: 0 0 22px rgba(52, 211, 153, 0.3);
+  --bg-desktop: #08130f;
+  --bg-app: #0e1c16;
+  --bg-surface: #152920;
+  --bg-surface-elevated: #1e382d;
+  --bg-surface-glass: rgba(21, 41, 32, 0.88);
+}
+[data-theme-color="pastel-mint"][data-theme-mode="light"] {
+  --bg-desktop: #dcfce7;
+  --bg-app: #f0fdf4;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #e2fbe9;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(52, 211, 153, 0.2);
+}
+
+/* 3. PASTEL LILAC (Lavender & Lilac Dream) */
+[data-theme-color="pastel-lilac"] {
+  --accent-primary: #c084fc;
+  --accent-primary-dark: #a855f7;
+  --color-safe: #c084fc;
+  --color-safe-light: #d8b4fe;
+  --color-safe-bg: rgba(192, 132, 252, 0.16);
+  --color-safe-border: rgba(192, 132, 252, 0.38);
+  --border-focus: #c084fc;
+  --shadow-glow-safe: 0 0 22px rgba(192, 132, 252, 0.3);
+  --bg-desktop: #0e0918;
+  --bg-app: #150f24;
+  --bg-surface: #1e1534;
+  --bg-surface-elevated: #2a1e48;
+  --bg-surface-glass: rgba(30, 21, 52, 0.88);
+}
+[data-theme-color="pastel-lilac"][data-theme-mode="light"] {
+  --bg-desktop: #f3e8ff;
+  --bg-app: #faf5ff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f4e8ff;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(192, 132, 252, 0.2);
+}
+
+/* 4. PASTEL PEACH (Warm Peach & Apricot) */
+[data-theme-color="pastel-peach"] {
+  --accent-primary: #fb923c;
+  --accent-primary-dark: #ea580c;
+  --color-safe: #fb923c;
+  --color-safe-light: #fdba74;
+  --color-safe-bg: rgba(251, 146, 60, 0.16);
+  --color-safe-border: rgba(251, 146, 60, 0.38);
+  --border-focus: #fb923c;
+  --shadow-glow-safe: 0 0 22px rgba(251, 146, 60, 0.3);
+  --bg-desktop: #140d07;
+  --bg-app: #1d130a;
+  --bg-surface: #281a0e;
+  --bg-surface-elevated: #372515;
+  --bg-surface-glass: rgba(40, 26, 14, 0.88);
+}
+[data-theme-color="pastel-peach"][data-theme-mode="light"] {
+  --bg-desktop: #ffedd5;
+  --bg-app: #fff7ed;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #fed7aa;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(251, 146, 60, 0.2);
+}
+
+/* 5. PASTEL SKY (Soft Sky & Baby Blue) */
+[data-theme-color="pastel-sky"] {
+  --accent-primary: #38bdf8;
+  --accent-primary-dark: #0284c7;
+  --color-safe: #38bdf8;
+  --color-safe-light: #7dd3fc;
+  --color-safe-bg: rgba(56, 189, 248, 0.16);
+  --color-safe-border: rgba(56, 189, 248, 0.38);
+  --border-focus: #38bdf8;
+  --shadow-glow-safe: 0 0 22px rgba(56, 189, 248, 0.3);
+  --bg-desktop: #071018;
+  --bg-app: #0d1824;
+  --bg-surface: #142232;
+  --bg-surface-elevated: #1c3046;
+  --bg-surface-glass: rgba(20, 34, 50, 0.88);
+}
+[data-theme-color="pastel-sky"][data-theme-mode="light"] {
+  --bg-desktop: #e0f2fe;
+  --bg-app: #f0f9ff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #bae6fd;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(56, 189, 248, 0.2);
+}
+
+/* 6. PASTEL SAKURA (Soft Cherry Blossom Pink) */
+[data-theme-color="pastel-sakura"] {
+  --accent-primary: #f472b6;
+  --accent-primary-dark: #db2777;
+  --color-safe: #f472b6;
+  --color-safe-light: #f9a8d4;
+  --color-safe-bg: rgba(244, 114, 182, 0.16);
+  --color-safe-border: rgba(244, 114, 182, 0.38);
+  --border-focus: #f472b6;
+  --shadow-glow-safe: 0 0 22px rgba(244, 114, 182, 0.3);
+  --bg-desktop: #140911;
+  --bg-app: #1d0d19;
+  --bg-surface: #281324;
+  --bg-surface-elevated: #371a31;
+  --bg-surface-glass: rgba(40, 19, 36, 0.88);
+}
+[data-theme-color="pastel-sakura"][data-theme-mode="light"] {
+  --bg-desktop: #fce7f3;
+  --bg-app: #fdf2f8;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #fbcfe8;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(244, 114, 182, 0.2);
+}
+
+/* 7. PASTEL MATCHA (Organic Soft Green Tea) */
+[data-theme-color="pastel-matcha"] {
+  --accent-primary: #a3e635;
+  --accent-primary-dark: #65a30d;
+  --color-safe: #a3e635;
+  --color-safe-light: #bef264;
+  --color-safe-bg: rgba(163, 230, 53, 0.16);
+  --color-safe-border: rgba(163, 230, 53, 0.38);
+  --border-focus: #a3e635;
+  --shadow-glow-safe: 0 0 22px rgba(163, 230, 53, 0.3);
+  --bg-desktop: #0d1207;
+  --bg-app: #141b0b;
+  --bg-surface: #1e2611;
+  --bg-surface-elevated: #293418;
+  --bg-surface-glass: rgba(30, 38, 17, 0.88);
+}
+[data-theme-color="pastel-matcha"][data-theme-mode="light"] {
+  --bg-desktop: #ecfccb;
+  --bg-app: #f7fee7;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #d9f99d;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(163, 230, 53, 0.2);
+}
+
+/* 8. PASTEL BUTTER (Soft Vanilla & Butter Cream) */
+[data-theme-color="pastel-butter"] {
+  --accent-primary: #facc15;
+  --accent-primary-dark: #ca8a04;
+  --color-safe: #facc15;
+  --color-safe-light: #fde047;
+  --color-safe-bg: rgba(250, 204, 21, 0.16);
+  --color-safe-border: rgba(250, 204, 21, 0.38);
+  --border-focus: #facc15;
+  --shadow-glow-safe: 0 0 22px rgba(250, 204, 21, 0.3);
+  --bg-desktop: #131005;
+  --bg-app: #1c1709;
+  --bg-surface: #27200d;
+  --bg-surface-elevated: #372d13;
+  --bg-surface-glass: rgba(39, 32, 13, 0.88);
+}
+[data-theme-color="pastel-butter"][data-theme-mode="light"] {
+  --bg-desktop: #fef9c3;
+  --bg-app: #fefce8;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #fef08a;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(250, 204, 21, 0.2);
+}
+
+/* 9. OCEAN CYAN */
+[data-theme-color="cyan"] {
+  --accent-primary: #06b6d4;
+  --accent-primary-dark: #0891b2;
+  --color-safe: #06b6d4;
+  --color-safe-light: #38bdf8;
+  --color-safe-bg: rgba(6, 182, 212, 0.14);
+  --color-safe-border: rgba(6, 182, 212, 0.35);
+  --border-focus: #06b6d4;
+  --shadow-glow-safe: 0 0 22px rgba(6, 182, 212, 0.28);
+  --bg-desktop: #060e13;
+  --bg-app: #0b151c;
+  --bg-surface: #101e28;
+  --bg-surface-elevated: #162a39;
+  --bg-surface-glass: rgba(16, 30, 40, 0.88);
+}
+[data-theme-color="cyan"][data-theme-mode="light"] {
+  --bg-desktop: #cffafe;
+  --bg-app: #ecfeff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #a5f3fc;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(6, 182, 212, 0.2);
+}
+
+/* 10. AMETHYST VIOLET */
+[data-theme-color="violet"] {
+  --accent-primary: #8b5cf6;
+  --accent-primary-dark: #7c3aed;
+  --color-safe: #8b5cf6;
+  --color-safe-light: #a78bfa;
+  --color-safe-bg: rgba(139, 92, 246, 0.14);
+  --color-safe-border: rgba(139, 92, 246, 0.35);
+  --border-focus: #8b5cf6;
+  --shadow-glow-safe: 0 0 22px rgba(139, 92, 246, 0.28);
+  --bg-desktop: #0c0817;
+  --bg-app: #120d22;
+  --bg-surface: #1a1330;
+  --bg-surface-elevated: #241b43;
+  --bg-surface-glass: rgba(26, 19, 48, 0.88);
+}
+[data-theme-color="violet"][data-theme-mode="light"] {
+  --bg-desktop: #ede9fe;
+  --bg-app: #f5f3ff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ddd6fe;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(139, 92, 246, 0.2);
+}
+
+/* 11. SUNSET AMBER */
+[data-theme-color="amber"] {
+  --accent-primary: #f59e0b;
+  --accent-primary-dark: #d97706;
+  --color-safe: #f59e0b;
+  --color-safe-light: #fbbf24;
+  --color-safe-bg: rgba(245, 158, 11, 0.14);
+  --color-safe-border: rgba(245, 158, 11, 0.35);
+  --border-focus: #f59e0b;
+  --shadow-glow-safe: 0 0 22px rgba(245, 158, 11, 0.28);
+  --bg-desktop: #130d04;
+  --bg-app: #1b1206;
+  --bg-surface: #271a09;
+  --bg-surface-elevated: #36240d;
+  --bg-surface-glass: rgba(39, 26, 9, 0.88);
+}
+[data-theme-color="amber"][data-theme-mode="light"] {
+  --bg-desktop: #fef3c7;
+  --bg-app: #fffbeb;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #fde68a;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(245, 158, 11, 0.2);
+}
+
+/* 12. ROSE BERRY */
+[data-theme-color="rose"] {
+  --accent-primary: #f43f5e;
+  --accent-primary-dark: #e11d48;
+  --color-safe: #f43f5e;
+  --color-safe-light: #fb7185;
+  --color-safe-bg: rgba(244, 63, 94, 0.14);
+  --color-safe-border: rgba(244, 63, 94, 0.35);
+  --border-focus: #f43f5e;
+  --shadow-glow-safe: 0 0 22px rgba(244, 63, 94, 0.28);
+  --bg-desktop: #14070a;
+  --bg-app: #1c0a0e;
+  --bg-surface: #270f14;
+  --bg-surface-elevated: #37151c;
+  --bg-surface-glass: rgba(39, 15, 20, 0.88);
+}
+[data-theme-color="rose"][data-theme-mode="light"] {
+  --bg-desktop: #ffe4e6;
+  --bg-app: #fff1f2;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #fecdd3;
+  --bg-surface-glass: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(244, 63, 94, 0.2);
+}
+
+/* Generic Light Mode Base Overrides */
+[data-theme-mode="light"] {
   --text-main: #0f172a;
   --text-muted: #64748b;
   --text-faint: #94a3b8;
-
+  --border-subtle: rgba(0, 0, 0, 0.08);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 [data-theme-mode="light"] body {
-  background: radial-gradient(circle at 50% 20%, #e2e8f0 0%, #cbd5e1 100%);
+  background-color: var(--bg-desktop);
+  background-image: radial-gradient(circle at 50% 15%, var(--color-safe-bg) 0%, transparent 75%);
 }
 
 [data-theme-mode="light"] #mobile-frame {
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.15), 0 0 20px var(--color-safe-bg);
 }
 
 [data-theme-mode="light"] .header-title-wrap h1 {
@@ -161,7 +409,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 50% 20%, #132238 0%, #07090e 70%);
+  background-color: var(--bg-desktop);
+  background-image: radial-gradient(circle at 50% 20%, var(--color-safe-bg) 0%, transparent 75%);
+  transition: background-color 0.3s ease;
 }
 
 /* ==========================================================================
@@ -177,8 +427,8 @@ body {
   position: relative;
   background-color: var(--bg-app);
   overflow: hidden;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 35px var(--color-safe-bg), 0 0 0 1px var(--border-subtle);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 @media (min-width: 481px) {
@@ -248,11 +498,18 @@ body {
 }
 
 .header-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 14px var(--color-safe-bg);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
   object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.header-logo:active {
+  transform: scale(0.92);
 }
 
 .header-title-wrap h1 {
@@ -1465,13 +1722,14 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
 }
 
 .theme-color-item:active {
@@ -1481,18 +1739,21 @@ body {
 .theme-color-item.active {
   border-color: var(--accent-primary);
   background: var(--color-safe-bg);
+  box-shadow: 0 0 16px var(--shadow-glow-safe);
 }
 
 .theme-swatch {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
 .theme-info {
   flex: 1;
+  min-width: 0;
 }
 
 .theme-name {
@@ -1506,40 +1767,62 @@ body {
   display: block;
   font-size: 11px;
   color: var(--text-muted);
+  margin-top: 2px;
 }
 
 .theme-check {
   color: var(--accent-primary);
   opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .theme-color-item.active .theme-check {
   opacity: 1;
+  transform: scale(1);
 }
 
 /* Quick Swatches in Settings */
 .theme-quick-swatches {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .quick-swatch {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .quick-swatch:active {
-  transform: scale(0.9);
+  transform: scale(0.88);
 }
 
 .quick-swatch.active {
   border-color: #ffffff;
-  transform: scale(1.1);
-  box-shadow: 0 0 10px var(--shadow-glow-safe);
+  transform: scale(1.15);
+  box-shadow: 0 0 14px var(--shadow-glow-safe), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.quick-swatch.active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
 }
 
 /* ==========================================================================

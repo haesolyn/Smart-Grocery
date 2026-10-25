@@ -11,6 +11,13 @@ const App = {
   currentThemeMode: 'dark',
   THEME_CONFIG: {
     emerald: { name: 'Emerald Fresh', color: '#10b981' },
+    'pastel-mint': { name: 'Pastel Mint', color: '#34d399' },
+    'pastel-lilac': { name: 'Pastel Lilac', color: '#c084fc' },
+    'pastel-peach': { name: 'Pastel Peach', color: '#fb923c' },
+    'pastel-sky': { name: 'Pastel Sky', color: '#38bdf8' },
+    'pastel-sakura': { name: 'Pastel Sakura', color: '#f472b6' },
+    'pastel-matcha': { name: 'Pastel Matcha', color: '#a3e635' },
+    'pastel-butter': { name: 'Pastel Butter', color: '#facc15' },
     cyan: { name: 'Ocean Cyan', color: '#06b6d4' },
     violet: { name: 'Amethyst Violet', color: '#8b5cf6' },
     amber: { name: 'Sunset Amber', color: '#f59e0b' },
@@ -292,11 +299,10 @@ const App = {
   },
 
   setThemeColor(color, showToast = true) {
-    if (this.THEME_CONFIG[color]) {
-      this.currentThemeColor = color;
-      this.applyTheme(showToast);
-      SoundEngine.playTick();
-    }
+    if (!color) return;
+    this.currentThemeColor = color;
+    this.applyTheme(showToast);
+    if (window.SoundEngine) SoundEngine.playTick();
   },
 
   setThemeMode(mode, showToast = true) {
@@ -490,21 +496,36 @@ const App = {
     if (btnModeDark) btnModeDark.addEventListener('click', () => this.setThemeMode('dark'));
     if (btnModeLight) btnModeLight.addEventListener('click', () => this.setThemeMode('light'));
 
-    // Theme color items in modal
-    document.querySelectorAll('.theme-color-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const theme = item.dataset.theme;
-        if (theme) this.setThemeColor(theme);
+    // Theme color items in modal (with event delegation)
+    const themeGrid = document.querySelector('.theme-colors-grid');
+    if (themeGrid) {
+      themeGrid.addEventListener('click', (e) => {
+        const item = e.target.closest('.theme-color-item');
+        if (item && item.dataset.theme) {
+          this.setThemeColor(item.dataset.theme);
+        }
+      });
+    }
+
+    // Quick swatches in settings card (with event delegation)
+    document.querySelectorAll('.theme-quick-swatches').forEach(container => {
+      container.addEventListener('click', (e) => {
+        const swatch = e.target.closest('.quick-swatch');
+        if (swatch && swatch.dataset.theme) {
+          this.setThemeColor(swatch.dataset.theme);
+        }
       });
     });
 
-    // Quick swatches in settings card
-    document.querySelectorAll('.quick-swatch').forEach(swatch => {
-      swatch.addEventListener('click', () => {
-        const theme = swatch.dataset.theme;
-        if (theme) this.setThemeColor(theme);
+    // Close theme modal when clicking outside on overlay
+    const modalThemeOverlay = document.getElementById('modal-theme');
+    if (modalThemeOverlay) {
+      modalThemeOverlay.addEventListener('click', (e) => {
+        if (e.target === modalThemeOverlay) {
+          this.closeThemeModal();
+        }
       });
-    });
+    }
 
     // 13. Pencarian Katalog Acuan
     const inputSearchCatalog = document.getElementById('catalog-search-input');
@@ -827,13 +848,13 @@ const App = {
     if (items.length === 0) {
       if (listContainer) {
         listContainer.innerHTML = `
-          <div class="empty-cart-state">
-            <div class="empty-cart-icon">
-              <i data-lucide="shopping-cart" style="width: 32px; height: 32px;"></i>
+          <div class="empty-cart-state" style="padding: 36px 16px; text-align: center;">
+            <div style="margin-bottom: 14px;">
+              <img src="icons/app-logo.png?v=9.2" alt="Smart Grocery Logo" style="width: 76px; height: 76px; border-radius: 20px; box-shadow: 0 10px 28px rgba(0,0,0,0.35), 0 0 25px var(--color-safe-bg); border: 2px solid rgba(255,255,255,0.25); margin: 0 auto; display: block; object-fit: cover;">
             </div>
-            <div class="empty-cart-title">Troli Belanja Kosong</div>
-            <div class="empty-cart-subtitle">
-              Dorong troli dan ketuk tombol <strong>(+)</strong> di kanan bawah untuk mencatat barang belanjaan kamu.
+            <div class="empty-cart-title" style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Troli Belanja Kosong</div>
+            <div class="empty-cart-subtitle" style="font-size: 13px; color: var(--text-muted); max-width: 290px; margin: 0 auto 18px; line-height: 1.5;">
+              Dorong troli dan ketuk tombol <strong>(+)</strong> di kanan bawah untuk mulai mencatat barang belanjaan kamu.
             </div>
             <button type="button" class="btn-primary" onclick="App.openItemModal(null)" style="margin: 0 auto; max-width: 220px;">
               <i data-lucide="plus" style="width: 18px; height: 18px;"></i>

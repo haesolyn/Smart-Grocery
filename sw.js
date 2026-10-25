@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-grocery-v7';
+const CACHE_NAME = 'smart-grocery-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ const ASSETS = [
   './js/sound.js',
   './js/pwa.js',
   './manifest.json',
+  './icons/app-logo.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon.svg'
@@ -20,7 +21,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-caching offline assets');
+      console.log('[SW] Pre-caching offline assets v9');
       return cache.addAll(ASSETS).catch(err => console.warn('[SW] Cache addAll warning:', err));
     }).then(() => self.skipWaiting())
   );
@@ -56,36 +57,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First strategy for HTML navigation requests (ensures immediate updates!)
-  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
-
-  // Stale-While-Revalidate for CSS and JS assets
+  // Network-First strategy for all app assets (HTML, JS, CSS, Images)
+  // This guarantees users immediately receive latest updates when online,
+  // and fully maintains offline capability when offline!
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+            return caches.match('./index.html');
           }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
-    })
+          return null;
+        });
+      })
   );
 });

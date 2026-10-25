@@ -73,7 +73,7 @@ const GroceryEngine = {
     const rawStr = discountStr.toString().trim().toLowerCase();
 
     // 1. Cek Potongan Nominal Langsung (contoh: "Rp 5000", "5000", "-5000")
-    if (rawStr.startsWith('rp') || (parseFloat(rawStr.replace(/[^\d.]/g, '')) > 100 && !rawStr.includes('%'))) {
+    if (!rawStr.includes('+') && (rawStr.startsWith('rp') || (parseFloat(rawStr.replace(/[^\d.]/g, '')) > 100 && !rawStr.includes('%')))) {
       const nominal = parseFloat(rawStr.replace(/[^\d.]/g, '')) || 0;
       const discount = Math.min(base, nominal);
       const finalP = Math.max(0, base - discount);
