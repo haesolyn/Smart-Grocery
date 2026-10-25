@@ -38,11 +38,11 @@
   --accent-secondary: #06b6d4;
   --accent-purple: #8b5cf6;
 
-  /* Typography & Text */
+  /* Typography & Text: Pure Native Apple iOS Font Stack */
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-faint: #64748b;
-  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* Dimensions & Spacing */
   --max-app-width: 430px;
@@ -393,15 +393,20 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body, button, input, select, textarea {
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   background-color: var(--bg-desktop);
-  font-family: var(--font-family);
   color: var(--text-main);
   user-select: none;
-  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.012em;
 }
 
 /* Desktop Ambient Backdrop */
