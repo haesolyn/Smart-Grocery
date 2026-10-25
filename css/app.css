@@ -738,17 +738,38 @@ body {
   gap: 8px;
 }
 
-.safety-message {
-  font-size: 11px;
+.safety-sisa-text,
+.budget-limit-text {
+  font-size: 12px;
+  color: var(--text-muted);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.safety-sisa-text strong,
+.budget-limit-text strong,
+#cart-remaining-budget {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.safety-cap-card.state-danger .safety-sisa-text strong,
+.safety-cap-card.state-danger #cart-remaining-budget {
+  color: var(--color-danger-light);
+}
+
+.safety-message {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-muted);
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 5px;
-  flex: 1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .safety-cap-card.state-safe .safety-message {
@@ -759,26 +780,13 @@ body {
   stroke: var(--accent-primary);
 }
 
+.safety-cap-card.state-warn .safety-message {
+  color: var(--color-warn-light);
+}
+
 .safety-cap-card.state-danger .safety-message {
   color: var(--color-danger-light);
   font-weight: 700;
-}
-
-.safety-sisa-text {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 500;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.safety-sisa-text strong {
-  color: var(--text-main);
-  font-weight: 700;
-}
-
-.safety-cap-card.state-danger .safety-sisa-text strong {
-  color: var(--color-danger-light);
 }
 
 /* Cloud Status Strip */

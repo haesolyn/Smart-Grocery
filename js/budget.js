@@ -44,29 +44,28 @@ const BudgetSafetyCap = {
 
     let status = 'safe';
     let label = 'Aman';
-    let message = 'Troli dalam kendali aman';
+    let message = `${percentage.toFixed(0)}% terpakai`;
     let icon = 'shield-check';
 
     if (percentage > 100) {
       status = 'danger';
       label = 'Overbudget!';
-      const over = spent - cap;
-      message = `WASPADA: Belanja melampaui limit Rp ${over.toLocaleString('id-ID')}!`;
+      message = `${percentage.toFixed(0)}% (Lewat limit)`;
       icon = 'alert-octagon';
     } else if (percentage >= 95) {
       status = 'danger';
       label = 'Kritis (95%+)';
-      message = `Kritis! Sisa uang belanja tinggal Rp ${remaining.toLocaleString('id-ID')}`;
+      message = `${percentage.toFixed(0)}% (Hampir habis)`;
       icon = 'alert-triangle';
     } else if (percentage >= 75) {
       status = 'warning';
       label = 'Mendekati Limit';
-      message = `Perhatian: Sudah ${percentage.toFixed(0)}% anggaran terpakai. Sisa Rp ${remaining.toLocaleString('id-ID')}`;
+      message = `${percentage.toFixed(0)}% terpakai`;
       icon = 'alert-circle';
     } else {
       status = 'safe';
       label = 'Anggaran Aman';
-      message = `Sisa kuota belanja anak rantau: Rp ${remaining.toLocaleString('id-ID')}`;
+      message = `${percentage.toFixed(0)}% terpakai`;
       icon = 'shield-check';
     }
 

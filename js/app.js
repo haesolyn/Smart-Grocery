@@ -923,6 +923,7 @@ const App = {
     const badgeText = document.getElementById('safety-badge-text');
     const badgeIcon = document.getElementById('safety-badge-icon');
     const spentText = document.getElementById('cart-total-spent');
+    const remainingLabel = document.getElementById('cart-remaining-label');
     const remainingText = document.getElementById('cart-remaining-budget');
     const barFill = document.getElementById('safety-bar-fill');
     const msgText = document.getElementById('safety-msg-text');
@@ -931,6 +932,9 @@ const App = {
 
     if (spentText) spentText.textContent = this.formatRupiah(evaluation.spent);
     if (capText) capText.textContent = this.formatRupiah(evaluation.cap);
+    if (remainingLabel) {
+      remainingLabel.textContent = evaluation.remaining >= 0 ? 'Sisa:' : 'Lewat:';
+    }
     if (remainingText) {
       if (evaluation.remaining >= 0) {
         remainingText.textContent = this.formatRupiah(evaluation.remaining);
@@ -954,7 +958,7 @@ const App = {
     if (badgeIcon) badgeIcon.setAttribute('data-lucide', evaluation.icon);
     if (msgText) msgText.textContent = evaluation.message;
     if (msgIcon) {
-      msgIcon.setAttribute('data-lucide', evaluation.status === 'safe' ? 'check-circle-2' : (evaluation.status === 'warning' ? 'alert-circle' : 'alert-octagon'));
+      msgIcon.setAttribute('data-lucide', evaluation.status === 'safe' ? 'pie-chart' : (evaluation.status === 'warning' ? 'alert-circle' : 'alert-octagon'));
     }
 
     // Audio / Haptic alert jika kondisi bahaya / overbudget
