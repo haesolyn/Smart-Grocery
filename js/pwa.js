@@ -7,12 +7,21 @@ const PWAHandler = {
   deferredPrompt: null,
 
   init() {
-    // 1. Daftarkan Service Worker
+    // 1. Daftarkan Service Worker dengan auto-update
     if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
           .then((reg) => {
             console.log('[PWA] Service Worker terdaftar dengan scope:', reg.scope);
+            reg.update();
           })
           .catch((err) => {
             console.warn('[PWA] Service Worker gagal didaftarkan:', err);

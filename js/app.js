@@ -556,7 +556,6 @@ const App = {
     }
 
     // 14. Firebase Cloud Sync Modal
-    const btnOpenCloud = document.getElementById('btn-open-cloud-sync');
     const btnCloseCloud = document.getElementById('btn-close-cloud-sync');
     const btnDoneCloud = document.getElementById('btn-done-cloud-sync');
     const btnTestCloud = document.getElementById('btn-test-cloud-sync');
@@ -565,7 +564,6 @@ const App = {
     const btnApplySyncCode = document.getElementById('btn-apply-sync-code');
     const inputSyncCode = document.getElementById('input-sync-code');
 
-    if (btnOpenCloud) btnOpenCloud.addEventListener('click', () => this.openCloudSyncModal());
     if (btnCloseCloud) btnCloseCloud.addEventListener('click', () => this.closeCloudSyncModal());
     if (btnDoneCloud) btnDoneCloud.addEventListener('click', () => this.closeCloudSyncModal());
 

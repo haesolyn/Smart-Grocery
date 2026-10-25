@@ -495,7 +495,6 @@ const FirebaseSync = {
   updateStatusBadge(status, message) {
     const dot = document.getElementById('cloud-status-dot');
     const label = document.getElementById('cloud-status-text');
-    const btn = document.getElementById('btn-open-cloud-sync');
     const lastSyncEl = document.getElementById('cloud-last-sync-time');
 
     if (dot) {
@@ -505,10 +504,6 @@ const FirebaseSync = {
     if (label) {
       label.textContent = message || (status === 'online' ? 'Online' : 'Offline');
       label.className = 'cloud-status-badge ' + status;
-    }
-
-    if (btn) {
-      btn.title = `Firebase (gro-pilot): ${message}`;
     }
 
     if (lastSyncEl && this.lastSyncedAt) {
