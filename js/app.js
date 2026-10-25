@@ -1376,11 +1376,13 @@ const App = {
     const historyList = ShoppingHistory.getHistory();
 
     if (badge) badge.textContent = `${historyList.length} Transaksi`;
+    this.updateStats();
     if (!container) return;
 
     if (historyList.length === 0) {
+      container.classList.add('is-empty');
       container.innerHTML = `
-        <div class="empty-cart-state">
+        <div class="empty-cart-state" style="width: 100%; grid-column: 1 / -1;">
           <div class="empty-cart-icon"><i data-lucide="receipt" style="width: 32px; height: 32px;"></i></div>
           <div class="empty-cart-title">Belum Ada Riwayat Belanja</div>
           <div class="empty-cart-subtitle">Selesaikan transaksi belanja di supermarket untuk menyimpan riwayat dan data pembanding.</div>
@@ -1390,8 +1392,9 @@ const App = {
       return;
     }
 
+    container.classList.remove('is-empty');
     container.innerHTML = '';
-    historyList.forEach((session, idx) => {
+    historyList.forEach((session) => {
       const card = document.createElement('div');
       card.className = 'history-card';
 
@@ -1401,24 +1404,30 @@ const App = {
         const cat = GroceryEngine.CATEGORIES[it.category] || GroceryEngine.CATEGORIES.others;
         itemsHtml += `
           <div class="history-item-row">
-            <div>
-              <span>${cat.icon} <strong>${it.name}</strong></span>
-              <span style="font-size: 11px; color: var(--text-faint); display: block;">${it.qty} ${it.unit || 'pcs'} @ ${this.formatRupiah(it.unitPrice)}</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 15px;">${cat.icon}</span>
+              <div>
+                <span style="font-weight: 700; color: var(--text-main); font-size: 13px;">${it.name}</span>
+                <span style="font-size: 11px; color: var(--text-muted); display: block;">${it.qty} ${it.unit || 'pcs'} @ ${this.formatRupiah(it.unitPrice)}</span>
+              </div>
             </div>
-            <div style="font-weight: 700; color: var(--text-main);">${this.formatRupiah(it.finalPrice)}</div>
+            <div style="font-weight: 700; color: var(--text-main); font-size: 13px; text-align: right;">${this.formatRupiah(it.finalPrice)}</div>
           </div>
         `;
       });
 
       card.innerHTML = `
         <div class="history-card-header">
-          <div>
+          <div class="history-store-group">
             <div class="history-store">${session.storeName}</div>
-            <div class="history-date">${session.dateFormatted}</div>
+            <div class="history-date">
+              <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: -1px; margin-right: 4px;"></i>
+              ${session.dateFormatted}
+            </div>
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 18px; font-weight: 800; color: var(--color-safe-light);">${this.formatRupiah(session.totalSpent)}</div>
-            ${session.totalSavings > 0 ? `<div style="font-size: 11px; color: var(--color-warn-light);">Hemat: ${this.formatRupiah(session.totalSavings)}</div>` : ''}
+          <div class="history-spent-group">
+            <div class="history-total-spent">${this.formatRupiah(session.totalSpent)}</div>
+            ${session.totalSavings > 0 ? `<div class="history-total-saved">Hemat ${this.formatRupiah(session.totalSavings)}</div>` : ''}
           </div>
         </div>
 
@@ -1436,22 +1445,25 @@ const App = {
         <!-- Accordion Toggle Barang Belanja -->
         <div class="history-items-accordion">
           <button type="button" class="history-accordion-toggle" onclick="App.toggleHistoryDetails('hist-detail-${session.id}')">
-            <i data-lucide="list" style="width: 13px; height: 13px;"></i>
-            <span>Lihat ${session.items.length} Barang Belanjaan</span>
-            <i data-lucide="chevron-down" style="width: 13px; height: 13px;"></i>
+            <div class="toggle-left">
+              <i data-lucide="shopping-bag" style="width: 14px; height: 14px; color: var(--color-safe-light);"></i>
+              <span>Detail ${session.items.length} Barang</span>
+            </div>
+            <i data-lucide="chevron-down" id="chevron-hist-detail-${session.id}" style="width: 14px; height: 14px; transition: transform 0.2s ease;"></i>
           </button>
-          <div id="hist-detail-${session.id}" style="display: none; margin-top: 8px;">
+          <div id="hist-detail-${session.id}" class="history-items-detail" style="display: none;">
             ${itemsHtml}
           </div>
         </div>
 
         <div class="history-card-actions">
-          <button type="button" class="btn-small-outline" onclick="App.cloneHistoryToCart('${session.id}')" title="Salin semua barang ke keranjang belanja saat ini">
+          <button type="button" class="btn-history-action btn-history-clone" onclick="App.cloneHistoryToCart('${session.id}')" title="Salin semua barang ke keranjang belanja saat ini">
             <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
-            <span>Belanja Lagi dari Sini</span>
+            <span>Salin ke Troli</span>
           </button>
-          <button type="button" class="btn-small-outline" onclick="App.deleteHistorySession('${session.id}')" style="max-width: 44px; color: var(--color-danger);" title="Hapus Riwayat">
-            <i data-lucide="trash" style="width: 14px; height: 14px;"></i>
+          <button type="button" class="btn-history-action btn-history-delete" onclick="App.deleteHistorySession('${session.id}')" title="Hapus Riwayat">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            <span>Hapus Riwayat</span>
           </button>
         </div>
       `;
@@ -1465,7 +1477,12 @@ const App = {
   toggleHistoryDetails(elemId) {
     const el = document.getElementById(elemId);
     if (!el) return;
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    const isHidden = el.style.display === 'none';
+    el.style.display = isHidden ? 'block' : 'none';
+    const chevron = document.getElementById(`chevron-${elemId}`);
+    if (chevron) {
+      chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
   },
 
   cloneHistoryToCart(sessionId) {
@@ -1530,9 +1547,17 @@ const App = {
     const statAvg = document.getElementById('stat-avg-spent');
     const statSaved = document.getElementById('stat-total-saved');
 
+    // Riwayat summary banner stats
+    const histStatCount = document.getElementById('hist-stat-count');
+    const histStatSpent = document.getElementById('hist-stat-total-spent');
+    const histStatSavings = document.getElementById('hist-stat-total-savings');
+
     if (historyList.length === 0) {
       if (statAvg) statAvg.textContent = 'Rp 0';
       if (statSaved) statSaved.textContent = 'Rp 0';
+      if (histStatCount) histStatCount.textContent = '0 Sesi';
+      if (histStatSpent) histStatSpent.textContent = 'Rp 0';
+      if (histStatSavings) histStatSavings.textContent = 'Rp 0';
       return;
     }
 
@@ -1546,6 +1571,10 @@ const App = {
     const avg = totalSpent / historyList.length;
     if (statAvg) statAvg.textContent = this.formatRupiah(avg);
     if (statSaved) statSaved.textContent = this.formatRupiah(totalSaved);
+
+    if (histStatCount) histStatCount.textContent = `${historyList.length} Sesi`;
+    if (histStatSpent) histStatSpent.textContent = this.formatRupiah(totalSpent);
+    if (histStatSavings) histStatSavings.textContent = this.formatRupiah(totalSaved);
   },
 
   // Toast Notification (Menyesuaikan Tema Dinamis)

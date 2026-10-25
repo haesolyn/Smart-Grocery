@@ -383,6 +383,7 @@
 [data-theme-mode="light"] .header-title-wrap h1 {
   background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -519,6 +520,7 @@ body {
   text-overflow: ellipsis;
   background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -1013,6 +1015,10 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 16px;
+  }
+
+  .history-list.is-empty {
+    display: block !important;
   }
 }
 
@@ -2139,10 +2145,37 @@ body {
 /* ==========================================================================
    RIWAYAT (HISTORY) TAB VIEW (F-06)
    ========================================================================== */
+.history-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+  .history-stats-grid {
+    gap: 8px;
+  }
+  .history-stats-grid .stat-box {
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .history-stats-grid .stat-box .title {
+    font-size: 10px;
+  }
+  .history-stats-grid .stat-box .number {
+    font-size: 13px;
+  }
+}
+
 .history-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.history-list.is-empty {
+  display: block !important;
 }
 
 .history-card {
@@ -2150,81 +2183,188 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 16px;
-  transition: transform 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .history-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.history-store-group {
+  min-width: 0;
+  flex: 1;
 }
 
 .history-store {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .history-date {
   font-size: 12px;
   color: var(--text-muted);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.history-spent-group {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.history-total-spent {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-safe-light);
+  letter-spacing: -0.3px;
+}
+
+.history-total-saved {
+  font-size: 11px;
+  color: var(--color-warn-light);
+  font-weight: 600;
+  margin-top: 1px;
 }
 
 .history-meta-row {
-  display: flex;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 10px 14px;
+  background: var(--bg-surface-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  align-items: center;
+}
+
+.history-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-meta-item:last-child {
+  text-align: right;
 }
 
 .history-meta-item .label {
   font-size: 10px;
   color: var(--text-muted);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .history-meta-item .value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
 }
 
-.history-meta-item .value.savings {
-  color: var(--color-warn-light);
-}
-
 .history-items-accordion {
-  font-size: 12px;
-  color: var(--text-muted);
+  margin-top: 10px;
 }
 
 .history-accordion-toggle {
-  background: none;
-  border: none;
-  color: var(--color-safe-light);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-accordion-toggle:hover {
+  background: var(--bg-surface);
+  border-color: var(--color-safe-border);
+}
+
+.history-accordion-toggle .toggle-left {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 0;
+  gap: 7px;
+}
+
+.history-items-detail {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  animation: fadeInView 0.2s ease;
 }
 
 .history-item-row {
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-subtle);
+}
+
+.history-item-row:last-child {
+  border-bottom: none;
 }
 
 .history-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.btn-history-action {
+  width: 100%;
+  height: 38px;
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-history-clone {
+  background: var(--color-safe-bg);
+  border: 1px solid var(--color-safe-border);
+  color: var(--color-safe-light);
+}
+
+.btn-history-clone:hover {
+  background: var(--color-safe);
+  color: #ffffff;
+}
+
+.btn-history-delete {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--color-danger);
+}
+
+.btn-history-delete:hover {
+  background: var(--color-danger);
+  color: #ffffff;
 }
 
 .btn-small-outline {
