@@ -44,7 +44,9 @@ const PWAHandler = {
     if (installBtn) {
       installBtn.addEventListener('click', async () => {
         if (!this.deferredPrompt) {
-          alert('Untuk memasang di iPhone/Safari: Ketuk tombol Bagikan (Share) lalu pilih "Tambah ke Layar Utama" (Add to Home Screen).');
+          if (window.App && typeof App.showToast === 'function') {
+            App.showToast('📱 Pasang di iPhone: Ketuk Bagikan lalu "Tambah ke Layar Utama"');
+          }
           return;
         }
         this.deferredPrompt.prompt();

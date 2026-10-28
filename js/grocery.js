@@ -21,7 +21,7 @@ const GroceryEngine = {
   },
 
   // Satuan yang didukung
-  UNITS: ['pcs', 'kg', 'liter', 'pack'],
+  UNITS: ['pcs', 'kg', 'liter', 'pack', 'karung/5kg'],
 
   // Keranjang belanja baru selalu mulai kosong
   defaultItems: [],

@@ -27,15 +27,18 @@ const FirebaseSync = {
   clientId: 'client_' + Math.random().toString(36).substring(2, 9),
   unsubscribeSnapshot: null,
   syncDebounceTimer: null,
-  // Mendapatkan dokumen referensi Firestore saat ini (HANYA jika user sudah LOGIN Google)
+  // Mendapatkan dokumen referensi Firestore (Akun Google atau Sesi Bersama Multi-Device)
   getTargetDocRef() {
     if (!this.db) return null;
     if (this.currentUser && this.currentUser.uid) {
       // PER-USER: Setiap user memiliki dokumen tersendiri yang terisolasi aman
       return this.db.collection('users').doc(this.currentUser.uid);
     }
-    // GUEST / BELUM LOGIN: Jangan konek / jangan sinkron ke cloud sama sekali!
-    return null;
+    // Sesi Belanja Bersama Multi-Device (SRS F-06B onSnapshot):
+    // Memungkinkan sinkronisasi instan antar HP dan PC tanpa harus login akun di PC lab
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || localStorage.getItem('sg_cloud_session') || 'sesi_rian';
+    return this.db.collection('shared_sessions').doc(sessionId);
   },
 
   // Inisialisasi Firebase, Firestore & Auth
@@ -119,14 +122,9 @@ const FirebaseSync = {
         App.showToast(`👋 Masuk sebagai <strong>${user.displayName || user.email}</strong>`, 'success');
       }
     } else {
-      console.log('[FirebaseSync] Mode Lokal Perangkat (Belum Login). Data tersimpan mandiri di HP/Laptop ini saja.');
-      this.updateStatusBadge('offline', 'Mode Lokal Perangkat');
-
-      // Hentikan listener realtime agar tidak terhubung ke perangkat lain
-      if (this.unsubscribeSnapshot) {
-        this.unsubscribeSnapshot();
-        this.unsubscribeSnapshot = null;
-      }
+      console.log('[FirebaseSync] Mode Sesi Bersama Multi-Device (SRS F-06B). Siap sinkron live antar HP & PC.');
+      this.updateStatusBadge('online', 'Sesi Realtime Cloud Aktif');
+      this.startRealtimeListener();
     }
   },
 
@@ -249,7 +247,7 @@ const FirebaseSync = {
     }
   },
 
-  // Realtime Snapshot Listener: HANYA aktif jika user sudah login
+  // Realtime Snapshot Listener: Aktif untuk Akun Google maupun Sesi Bersama Multi-Device (SRS F-06B)
   startRealtimeListener() {
     if (!this.db) return;
 
@@ -258,17 +256,13 @@ const FirebaseSync = {
       this.unsubscribeSnapshot = null;
     }
 
-    // JIKA BELUM LOGIN, JANGAN PERNAH PASANG LISTENER CLOUD
-    if (!this.currentUser || !this.currentUser.uid) {
-      console.log('[FirebaseSync] Belum login: Listener Cloud dimatikan (Penyimpanan Lokal Mandiri).');
-      return;
-    }
-
     const docRef = this.getTargetDocRef();
     if (!docRef) return;
 
-    const pathDesc = `users/${this.currentUser.uid} (${this.currentUser.email})`;
-    console.log(`[FirebaseSync] Memulai realtime listener pada: ${pathDesc}`);
+    const pathDesc = this.currentUser && this.currentUser.uid
+      ? `users/${this.currentUser.uid} (${this.currentUser.email})`
+      : `shared_sessions/sesi_rian (Lab Multi-Device)`;
+    console.log(`[FirebaseSync] Memulai realtime onSnapshot listener pada: ${pathDesc}`);
 
     this.unsubscribeSnapshot = docRef.onSnapshot({ includeMetadataChanges: false }, (doc) => {
       this.isConnected = true;
@@ -345,10 +339,11 @@ const FirebaseSync = {
     });
   },
 
-  // Push Data Lokal ke Dokumen Firestore (Debounced 350ms) - HANYA jika sudah LOGIN
+  // Push Data Lokal ke Dokumen Firestore (Debounced 350ms) - SRS F-06B
   pushToCloud(immediate = false) {
     if (!this.db) return;
-    if (!this.currentUser || !this.currentUser.uid) return; // JANGAN PUSH JIKA BELUM LOGIN!
+    const docRef = this.getTargetDocRef();
+    if (!docRef) return;
 
     if (this.syncDebounceTimer) {
       clearTimeout(this.syncDebounceTimer);
@@ -388,6 +383,8 @@ const FirebaseSync = {
           cartItems: cartItems,
           budgetCap: budgetCap,
           shoppingHistory: shoppingHistory,
+          activeStore: localStorage.getItem('sg_active_store') || 'Lotte Mart Grocery - Puri Indah',
+          activeDate: localStorage.getItem('sg_active_date') || '',
           updatedBy: this.clientId,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           deviceInfo: navigator.userAgent.substring(0, 80),

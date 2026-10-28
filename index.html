@@ -80,6 +80,12 @@
       </div>
     </header>
 
+    <!-- F-05: BANNER PERINGATAN OVERBUDGET (Menyala Merah Tegas saat > 100%) -->
+    <div class="overbudget-banner" id="overbudget-alert-banner" style="display: none;">
+      <i data-lucide="alert-octagon" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
+      <span>Total belanja melebihi batas saldo dompet! Kurangi kuantitas atau batalkan barang sekunder.</span>
+    </div>
+
     <!-- F-05: PENGENDALI ANGGARAN (SAFETY CAP) WIDGET STICKY -->
     <div class="safety-cap-card state-safe" id="safety-cap-widget">
       <div class="safety-row-top">
@@ -136,7 +142,41 @@
             <i data-lucide="shopping-cart" style="width: 18px; height: 18px; color: var(--color-safe-light);"></i>
             <span>Isi Troli Belanja</span>
           </div>
-          <span class="view-badge-pill" id="cart-count-badge">0 Barang</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" class="btn-clear-cart" id="btn-clear-all-cart" title="Kosongkan Seluruh Troli" onclick="App.openConfirmClearModal()" style="display: none;">
+              <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+              <span>Kosongkan</span>
+            </button>
+            <span class="view-badge-pill" id="cart-count-badge">0 Barang</span>
+          </div>
+        </div>
+
+        <!-- Sesi Belanja: Lokasi Toko & Selector Tanggal (SRS F-01 & F-06A) -->
+        <div class="session-bar-card" id="session-bar-card">
+          <div class="session-field">
+            <label for="select-store-location">
+              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
+              <span>Lokasi Toko</span>
+            </label>
+            <div class="session-input-wrap">
+              <select id="select-store-location" class="session-select">
+                <option value="Lotte Mart Grocery - Puri Indah" selected>Lotte Mart Grocery - Puri Indah</option>
+                <option value="Superindo Kaliurang">Superindo Kaliurang</option>
+                <option value="Hypermart Puri Indah">Hypermart Puri Indah</option>
+                <option value="Indomaret Point">Indomaret Point</option>
+                <option value="Alfamidi Super">Alfamidi Super</option>
+              </select>
+            </div>
+          </div>
+          <div class="session-field">
+            <label for="input-session-date">
+              <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
+              <span>Tanggal Belanja</span>
+            </label>
+            <div class="session-input-wrap">
+              <input type="date" id="input-session-date" class="session-date-input">
+            </div>
+          </div>
         </div>
 
 
@@ -209,10 +249,10 @@
 
               <!-- Quick Budget Preset Chips -->
               <div class="quick-chips-row">
+                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(100000)">Rp 100.000 (Uji DT2)</button>
+                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(150000)">Rp 150.000 (Uji F5)</button>
                 <button type="button" class="quick-chip active" onclick="App.setBudgetPreset(350000)">Rp 350.000 (Kasus Rian)</button>
                 <button type="button" class="quick-chip" onclick="App.setBudgetPreset(500000)">Rp 500.000</button>
-                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(750000)">Rp 750.000</button>
-                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(1000000)">Rp 1.000.000</button>
               </div>
             </div>
 
@@ -346,6 +386,7 @@
               <div class="unit-selector-row" id="unit-pills-container">
                 <button type="button" class="unit-btn active" data-unit="pcs">pcs</button>
                 <button type="button" class="unit-btn" data-unit="kg">kg</button>
+                <button type="button" class="unit-btn" data-unit="karung/5kg">karung/5kg</button>
                 <button type="button" class="unit-btn" data-unit="liter">liter</button>
                 <button type="button" class="unit-btn" data-unit="pack">pack</button>
               </div>
@@ -356,7 +397,7 @@
               <label class="form-label">Jumlah / Qty</label>
               <div class="stepper-control" style="height: 40px; margin-top: 6px;">
                 <button type="button" class="stepper-btn" id="modal-qty-minus">-</button>
-                <input type="number" id="input-item-qty" value="1" min="0.1" step="any" class="form-input" style="height: 100%; border: none; text-align: center; font-weight: 800; font-size: 16px; background: transparent; padding: 0;">
+                <input type="number" id="input-item-qty" inputmode="numeric" value="1" min="0.1" step="any" class="form-input" style="height: 100%; border: none; text-align: center; font-weight: 800; font-size: 16px; background: transparent; padding: 0;">
                 <button type="button" class="stepper-btn" id="modal-qty-plus">+</button>
               </div>
             </div>
@@ -726,6 +767,21 @@
         <button type="button" class="btn-primary" id="btn-save-theme-modal" style="width: 100%; margin-top: 14px;">
           <span>Selesai</span>
         </button>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus Aman (SRS F-06A & UX) -->
+    <div class="modal-overlay" id="modal-confirm-clear">
+      <div class="modal-sheet" style="max-height: 280px; padding: 20px 18px; text-align: center;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); color: var(--color-danger-light); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+          <i data-lucide="trash-2" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text-main);">Kosongkan Troli Belanja?</h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">Seluruh daftar barang yang ada di troli saat ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button type="button" class="btn-cancel" onclick="App.closeConfirmClearModal()">Batal</button>
+          <button type="button" class="btn-primary" style="background: var(--color-danger); border-color: var(--color-danger);" onclick="App.executeClearCart()">Ya, Kosongkan</button>
+        </div>
       </div>
     </div>
 

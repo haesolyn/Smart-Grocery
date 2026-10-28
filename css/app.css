@@ -864,6 +864,100 @@ body {
   font-weight: 700;
 }
 
+/* Overbudget Warning Banner (SRS F-05) */
+.overbudget-banner {
+  margin: 10px 14px 4px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  animation: bannerPulse 2s infinite ease-in-out;
+}
+@keyframes bannerPulse {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 0.93; transform: translateY(-1px); }
+}
+
+/* Sesi Belanja (Lokasi Toko & Tanggal Belanja - SRS F-01 & F-06A) */
+.session-bar-card {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+@media (max-width: 380px) {
+  .session-bar-card {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+.session-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.session-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.session-input-wrap {
+  width: 100%;
+}
+.session-select,
+.session-date-input {
+  width: 100%;
+  height: 38px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 8px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+.session-select:focus,
+.session-date-input:focus {
+  border-color: var(--accent-primary);
+}
+
+/* Tombol Kosongkan Troli */
+.btn-clear-cart {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--color-danger-light);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-clear-cart:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
 /* Cloud Status Strip */
 .cloud-status-strip {
   margin: 0 16px 12px;

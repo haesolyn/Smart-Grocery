@@ -8,34 +8,40 @@ const PriceComparator = {
 
   // Database harga acuan bulan lalu (Default untuk anak rantau)
   defaultDatabase: [
-    { id: 'p1', name: 'Minyak Goreng Sania 2L', category: 'staples', unit: 'liter', prevPrice: 34000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p1', name: 'Minyak Goreng Sania 2L', category: 'staples', unit: 'liter', prevPrice: 43000, lastUpdated: 'Bulan Lalu' },
     { id: 'p2', name: 'Beras Rojolele 5kg', category: 'staples', unit: 'kg', prevPrice: 68000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p3', name: 'Telur Ayam Negeri 1kg', category: 'protein', unit: 'kg', prevPrice: 28000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p4', name: 'Indomie Goreng (Pack 5 pcs)', category: 'staples', unit: 'pack', prevPrice: 15500, lastUpdated: 'Bulan Lalu' },
-    { id: 'p5', name: 'Susu UHT Ultra Milk 1L', category: 'beverage', unit: 'liter', prevPrice: 19500, lastUpdated: 'Bulan Lalu' },
-    { id: 'p6', name: 'Sabun Mandi Lifebuoy Refill 450ml', category: 'toiletries', unit: 'pcs', prevPrice: 21000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p7', name: 'Pasta Gigi Pepsodent 190g', category: 'toiletries', unit: 'pcs', prevPrice: 14500, lastUpdated: 'Bulan Lalu' },
-    { id: 'p8', name: 'Deterjen Bubuk Rinso 770g', category: 'toiletries', unit: 'pack', prevPrice: 22500, lastUpdated: 'Bulan Lalu' },
-    { id: 'p9', name: 'Nugget Fiesta Crispy 500g', category: 'protein', unit: 'pack', prevPrice: 45000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p10', name: 'Kopi Kapal Api Mix 10s', category: 'beverage', unit: 'pack', prevPrice: 13500, lastUpdated: 'Bulan Lalu' },
-    { id: 'p11', name: 'Roti Tawar Kupas', category: 'staples', unit: 'pack', prevPrice: 15000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p12', name: 'Biskuit Roma Kelapa 300g', category: 'snacks', unit: 'pack', prevPrice: 11500, lastUpdated: 'Bulan Lalu' },
-    { id: 'p13', name: 'Saus Sambal ABC 275ml', category: 'seasoning', unit: 'pcs', prevPrice: 12000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p14', name: 'Sampo Pantene Anti Dandruff 160ml', category: 'toiletries', unit: 'pcs', prevPrice: 24000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p15', name: 'Bawang Merah Segar 250g', category: 'produce', unit: 'pack', prevPrice: 10000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p16', name: 'Wajan Penggorengan Anti Lengket', category: 'others', unit: 'pcs', prevPrice: 105000, lastUpdated: 'Bulan Lalu' }
+    { id: 'p3', name: 'Telur Ayam Negeri 1kg', category: 'protein', unit: 'kg', prevPrice: 32000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p4', name: 'Garam Dapur Halus 500g', category: 'seasoning', unit: 'pack', prevPrice: 5000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p5', name: 'Indomie Goreng (Pack 5 pcs)', category: 'staples', unit: 'pack', prevPrice: 15500, lastUpdated: 'Bulan Lalu' },
+    { id: 'p6', name: 'Susu UHT Ultra Milk 1L', category: 'beverage', unit: 'liter', prevPrice: 19500, lastUpdated: 'Bulan Lalu' },
+    { id: 'p7', name: 'Sabun Mandi Lifebuoy Refill 450ml', category: 'toiletries', unit: 'pcs', prevPrice: 21000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p8', name: 'Pasta Gigi Pepsodent 190g', category: 'toiletries', unit: 'pcs', prevPrice: 14500, lastUpdated: 'Bulan Lalu' },
+    { id: 'p9', name: 'Deterjen Bubuk Rinso 770g', category: 'toiletries', unit: 'pack', prevPrice: 22500, lastUpdated: 'Bulan Lalu' },
+    { id: 'p10', name: 'Nugget Fiesta Crispy 500g', category: 'protein', unit: 'pack', prevPrice: 45000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p11', name: 'Kopi Kapal Api Mix 10s', category: 'beverage', unit: 'pack', prevPrice: 13500, lastUpdated: 'Bulan Lalu' },
+    { id: 'p12', name: 'Roti Tawar Kupas', category: 'staples', unit: 'pack', prevPrice: 15000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p13', name: 'Biskuit Roma Kelapa 300g', category: 'snacks', unit: 'pack', prevPrice: 11500, lastUpdated: 'Bulan Lalu' },
+    { id: 'p14', name: 'Saus Sambal ABC 275ml', category: 'seasoning', unit: 'pcs', prevPrice: 12000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p15', name: 'Sampo Pantene Anti Dandruff 160ml', category: 'toiletries', unit: 'pcs', prevPrice: 24000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p16', name: 'Bawang Merah Segar 250g', category: 'produce', unit: 'pack', prevPrice: 10000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p17', name: 'Wajan Penggorengan Anti Lengket', category: 'others', unit: 'pcs', prevPrice: 105000, lastUpdated: 'Bulan Lalu' }
   ],
 
   getDatabase() {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        const dt2Keys = ['telur', 'garam', 'beras', 'wajan'];
+        const hasAllDt2 = dt2Keys.every(k => parsed.some(p => this.normalize(p.name).includes(k)));
+        if (hasAllDt2) {
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Error loading price database:', e);
     }
-    // Set default if empty
+    // Set default if empty or missing DT2 items
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.defaultDatabase));
     return this.defaultDatabase;
   },

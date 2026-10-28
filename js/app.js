@@ -51,6 +51,7 @@ const App = {
     this.setupDiscountChips();
     this.setupEventListeners();
     this.setupInputCalculators();
+    this.initSessionStoreAndDate();
 
     // Render initial views
     this.renderCart();
@@ -797,8 +798,10 @@ const App = {
     if (elSavings) elSavings.textContent = totals.totalSavings > 0 ? `-${this.formatRupiah(totals.totalSavings)}` : 'Rp 0';
     if (elFinal) elFinal.textContent = this.formatRupiah(totals.totalExpenditure);
 
+    const btnClearAll = document.getElementById('btn-clear-all-cart');
     const belanjaWrapper = document.querySelector('.belanja-layout-wrapper');
     if (items.length === 0) {
+      if (btnClearAll) btnClearAll.style.display = 'none';
       if (belanjaWrapper) belanjaWrapper.classList.add('is-empty');
       if (listContainer) {
         listContainer.classList.add('is-empty');
@@ -807,7 +810,7 @@ const App = {
             <img src="icons/app-logo.png?v=9.7" alt="Smart Grocery Logo" class="empty-cart-logo">
             <div class="empty-cart-title">Troli Belanja Kosong</div>
             <div class="empty-cart-subtitle">
-              Mulai catat barang belanjaan kamu untuk memantau batas aman anggaran belanja secara realtime.
+              Keranjang belanja masih kosong, silakan scan atau tambahkan kebutuhan pokok pertamamu untuk memantau batas aman anggaran belanja secara realtime.
             </div>
             <button type="button" class="empty-cart-btn" onclick="App.openItemModal(null)">
               <i data-lucide="plus"></i>
@@ -826,6 +829,7 @@ const App = {
       return;
     }
 
+    if (btnClearAll) btnClearAll.style.display = 'inline-flex';
     if (belanjaWrapper) belanjaWrapper.classList.remove('is-empty');
     if (listContainer) listContainer.classList.remove('is-empty');
     if (summaryBox) summaryBox.style.display = 'block';
@@ -975,6 +979,16 @@ const App = {
     if (msgText) msgText.textContent = evaluation.message;
     if (msgIcon) {
       msgIcon.setAttribute('data-lucide', evaluation.status === 'safe' ? 'pie-chart' : (evaluation.status === 'warning' ? 'alert-circle' : 'alert-octagon'));
+    }
+
+    // F-05: Peringatan Banner Merah Tegas saat > 100% Saldo Dompet
+    const overbudgetBanner = document.getElementById('overbudget-alert-banner');
+    if (overbudgetBanner) {
+      if (totals.totalExpenditure > evaluation.cap) {
+        overbudgetBanner.style.display = 'flex';
+      } else {
+        overbudgetBanner.style.display = 'none';
+      }
     }
 
     // Audio / Haptic alert jika kondisi bahaya / overbudget
@@ -1222,17 +1236,28 @@ const App = {
     const inputPrice = document.getElementById('input-item-price');
     const inputDiscount = document.getElementById('input-item-discount');
 
-    const name = inputName.value.trim();
-    const qty = parseFloat(inputQty.value) || 1;
-    const unitPrice = parseFloat(inputPrice.value) || 0;
-    const discountStr = inputDiscount.value.trim();
+    const name = inputName ? inputName.value.trim() : '';
+    const rawPrice = inputPrice ? inputPrice.value.trim() : '';
+    const unitPrice = parseFloat(rawPrice) || 0;
+    const qty = parseFloat(inputQty ? inputQty.value : 1) || 1;
+    const discountStr = inputDiscount ? inputDiscount.value.trim() : '';
 
+    // Validasi Form Tegas (SRS F-01 & DT2 Uji Validasi)
     if (!name) {
-      this.showToast('Nama produk tidak boleh kosong!', 'error');
+      this.showToast('Nama barang belanjaan wajib diisi!', 'error');
+      if (inputName) inputName.focus();
       return;
     }
-    if (unitPrice <= 0) {
-      this.showToast('Masukkan harga satuan yang valid!', 'error');
+
+    if (rawPrice === '' || isNaN(unitPrice) || unitPrice <= 0) {
+      this.showToast('Harga satuan harus berupa angka positif lebih dari Rp 0 (tidak boleh minus atau 0)!', 'error');
+      if (inputPrice) inputPrice.focus();
+      return;
+    }
+
+    if (qty <= 0 || isNaN(qty)) {
+      this.showToast('Kuantitas barang harus lebih dari 0!', 'error');
+      if (inputQty) inputQty.focus();
       return;
     }
 
@@ -1261,8 +1286,7 @@ const App = {
       if (projectedTotal > cap) {
         SoundEngine.playWarningBuzz();
         const overBy = projectedTotal - cap;
-        const confirmAdd = confirm(`⚠️ PERINGATAN ANGGARAN:\nBarang ini akan membuat belanja melebihi batas limit sebesar ${this.formatRupiah(overBy)}!\n\nTetap tambahkan ke troli?`);
-        if (!confirmAdd) return;
+        this.showToast(`⚠️ Peringatan Anggaran: Total belanja melampaui batas limit sebesar ${this.formatRupiah(overBy)}!`, 'error');
       }
 
       GroceryEngine.addItem(itemData);
@@ -1359,8 +1383,9 @@ const App = {
   },
 
   processCheckout() {
+    const activeStore = localStorage.getItem('sg_active_store') || 'Lotte Mart Grocery - Puri Indah';
     const storeInput = document.getElementById('checkout-store-name');
-    const storeName = storeInput ? storeInput.value.trim() : 'Superindo';
+    const storeName = storeInput && storeInput.value.trim() ? storeInput.value.trim() : activeStore;
 
     const session = ShoppingHistory.finishCurrentShopping(storeName);
     this.closeCheckoutModal();
@@ -1599,6 +1624,65 @@ const App = {
     this.toastTimeout = setTimeout(() => {
       toast.classList.remove('show');
     }, 2500);
+  },
+
+  // Sesi Toko & Tanggal Aktif (SRS F-01 & F-06A)
+  initSessionStoreAndDate() {
+    const storeSelect = document.getElementById('select-store-location');
+    const dateInput = document.getElementById('input-session-date');
+
+    const defaultStore = 'Lotte Mart Grocery - Puri Indah';
+    const savedStore = localStorage.getItem('sg_active_store') || defaultStore;
+
+    // Default tanggal belanja saat ini (format YYYY-MM-DD)
+    const todayStr = new Date().toISOString().split('T')[0];
+    const savedDate = localStorage.getItem('sg_active_date') || todayStr;
+
+    if (storeSelect) {
+      storeSelect.value = savedStore;
+      storeSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        localStorage.setItem('sg_active_store', val);
+        this.showToast(`Lokasi toko: <strong>${val}</strong>`);
+        if (window.FirebaseSync && typeof FirebaseSync.pushToCloud === 'function') {
+          FirebaseSync.pushToCloud();
+        }
+      });
+    }
+
+    if (dateInput) {
+      dateInput.value = savedDate;
+      dateInput.addEventListener('change', (e) => {
+        const val = e.target.value;
+        localStorage.setItem('sg_active_date', val);
+        this.showToast(`Tanggal transaksi: <strong>${val}</strong>`);
+        if (window.FirebaseSync && typeof FirebaseSync.pushToCloud === 'function') {
+          FirebaseSync.pushToCloud();
+        }
+      });
+    }
+  },
+
+  // Modal Konfirmasi Hapus Aman (SRS F-06A & UX Non-blocking)
+  openConfirmClearModal() {
+    const modal = document.getElementById('modal-confirm-clear');
+    if (modal) {
+      modal.classList.add('active');
+      this.initLucideIcons();
+    }
+  },
+
+  closeConfirmClearModal() {
+    const modal = document.getElementById('modal-confirm-clear');
+    if (modal) modal.classList.remove('active');
+  },
+
+  executeClearCart() {
+    this.closeConfirmClearModal();
+    GroceryEngine.clearCart();
+    this.renderCart();
+    this.showToast('Seluruh isi troli berhasil dikosongkan!');
+    SoundEngine.playTick();
   }
 };
 
