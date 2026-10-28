@@ -22,7 +22,8 @@ const PriceComparator = {
     { id: 'p12', name: 'Biskuit Roma Kelapa 300g', category: 'snacks', unit: 'pack', prevPrice: 11500, lastUpdated: 'Bulan Lalu' },
     { id: 'p13', name: 'Saus Sambal ABC 275ml', category: 'seasoning', unit: 'pcs', prevPrice: 12000, lastUpdated: 'Bulan Lalu' },
     { id: 'p14', name: 'Sampo Pantene Anti Dandruff 160ml', category: 'toiletries', unit: 'pcs', prevPrice: 24000, lastUpdated: 'Bulan Lalu' },
-    { id: 'p15', name: 'Bawang Merah Segar 250g', category: 'produce', unit: 'pack', prevPrice: 10000, lastUpdated: 'Bulan Lalu' }
+    { id: 'p15', name: 'Bawang Merah Segar 250g', category: 'produce', unit: 'pack', prevPrice: 10000, lastUpdated: 'Bulan Lalu' },
+    { id: 'p16', name: 'Wajan Penggorengan Anti Lengket', category: 'others', unit: 'pcs', prevPrice: 105000, lastUpdated: 'Bulan Lalu' }
   ],
 
   getDatabase() {

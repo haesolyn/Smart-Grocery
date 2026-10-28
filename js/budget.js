@@ -6,7 +6,7 @@
 
 const BudgetSafetyCap = {
   STORAGE_KEY: 'sg_budget_cap',
-  DEFAULT_CAP: 500000, // Rp 500.000 standar belanja bulanan anak rantau
+  DEFAULT_CAP: 350000, // Rp 350.000 batas dompet Kasus Rian (Daily Test 2)
 
   getCap() {
     try {

@@ -668,11 +668,13 @@ body {
   background: var(--color-safe);
 }
 
-.safety-cap-card.state-warn {
+.safety-cap-card.state-warn,
+.safety-cap-card.state-warning {
   border-color: var(--color-warn-border);
   background: linear-gradient(180deg, var(--bg-surface) 0%, rgba(245, 158, 11, 0.08) 100%);
 }
-.safety-cap-card.state-warn::before {
+.safety-cap-card.state-warn::before,
+.safety-cap-card.state-warning::before {
   background: var(--color-warn);
 }
 
@@ -744,7 +746,8 @@ body {
   color: var(--color-safe-light);
 }
 
-.safety-cap-card.state-warn .safety-badge {
+.safety-cap-card.state-warn .safety-badge,
+.safety-cap-card.state-warning .safety-badge {
   background: var(--color-warn-bg);
   color: var(--color-warn-light);
 }
@@ -792,7 +795,8 @@ body {
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
 }
 
-.safety-cap-card.state-warn .safety-bar-fill {
+.safety-cap-card.state-warn .safety-bar-fill,
+.safety-cap-card.state-warning .safety-bar-fill {
   background: linear-gradient(90deg, var(--color-safe) 0%, var(--color-warn) 100%);
 }
 
@@ -850,7 +854,8 @@ body {
   stroke: var(--accent-primary);
 }
 
-.safety-cap-card.state-warn .safety-message {
+.safety-cap-card.state-warn .safety-message,
+.safety-cap-card.state-warning .safety-message {
   color: var(--color-warn-light);
 }
 

@@ -27,11 +27,12 @@ const App = {
   init() {
     console.log('[App] Initializing Smart Grocery PWA...');
 
-    // Pastikan semua perangkat memulai dari kondisi bersih (troli & riwayat kosong)
-    const CLEAN_SLATE_KEY = 'sg_clean_slate_v2';
+    // Pastikan semua perangkat memulai dari kondisi bersih (troli & riwayat kosong, dompet default Rp 350.000 Kasus Rian)
+    const CLEAN_SLATE_KEY = 'sg_clean_slate_v3';
     if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
       localStorage.removeItem('sg_cart_items');
       localStorage.removeItem('sg_shopping_history');
+      localStorage.setItem('sg_budget_cap', '350000');
       localStorage.setItem(CLEAN_SLATE_KEY, 'true');
     }
 
@@ -962,8 +963,11 @@ const App = {
     }
 
     if (widget) {
-      widget.classList.remove('state-safe', 'state-warn', 'state-danger');
+      widget.classList.remove('state-safe', 'state-warn', 'state-warning', 'state-danger');
       widget.classList.add(`state-${evaluation.status}`);
+      if (evaluation.status === 'warning') {
+        widget.classList.add('state-warn');
+      }
     }
 
     if (badgeText) badgeText.textContent = evaluation.label;

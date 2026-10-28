@@ -203,14 +203,14 @@
             <div class="budget-setting-card">
               <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Batas Maksimal Uang (Safety Cap)</label>
               <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <input type="number" class="form-input" id="input-budget-setting" inputmode="numeric" placeholder="Contoh: 500000" style="font-size: 18px; font-weight: 700;">
+                <input type="number" class="form-input" id="input-budget-setting" inputmode="numeric" placeholder="Contoh: 350000" style="font-size: 18px; font-weight: 700;">
                 <button type="button" class="btn-primary" id="btn-save-budget-setting" style="width: 100px;">Simpan</button>
               </div>
 
               <!-- Quick Budget Preset Chips -->
               <div class="quick-chips-row">
-                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(350000)">Rp 350.000</button>
-                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(500000)">Rp 500.000 (Rekomendasi)</button>
+                <button type="button" class="quick-chip active" onclick="App.setBudgetPreset(350000)">Rp 350.000 (Kasus Rian)</button>
+                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(500000)">Rp 500.000</button>
                 <button type="button" class="quick-chip" onclick="App.setBudgetPreset(750000)">Rp 750.000</button>
                 <button type="button" class="quick-chip" onclick="App.setBudgetPreset(1000000)">Rp 1.000.000</button>
               </div>
@@ -403,6 +403,7 @@
             <div class="discount-preset-chips">
               <button type="button" class="discount-chip active" data-disc="0">Tanpa Diskon</button>
               <button type="button" class="discount-chip" data-disc="20%">20%</button>
+              <button type="button" class="discount-chip" data-disc="25%">25%</button>
               <button type="button" class="discount-chip" data-disc="30% + 10%">30% + 10%</button>
               <button type="button" class="discount-chip" data-disc="50% + 20%">50% + 20%</button>
               <button type="button" class="discount-chip" data-disc="50%">Buy 1 Get 1 (50%)</button>
