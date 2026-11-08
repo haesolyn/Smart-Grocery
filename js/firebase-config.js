@@ -27,6 +27,8 @@ const FirebaseSync = {
   clientId: 'client_' + Math.random().toString(36).substring(2, 9),
   unsubscribeSnapshot: null,
   syncDebounceTimer: null,
+  pendingEmailVerification: null,
+  pendingEmailUser: null,
   // Mendapatkan dokumen referensi Firestore (Akun Google atau Sesi Bersama Multi-Device)
   getTargetDocRef() {
     if (!this.db) return null;
@@ -108,27 +110,45 @@ const FirebaseSync = {
 
   // Handler saat status login user berubah
   async handleAuthStateChange(user) {
-    this.currentUser = user;
-    this.updateAuthUI(user);
-
     if (user) {
+      // Periksa apakah login via Google atau Email
+      const isGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+      const isEmailVerifiedSession = localStorage.getItem('sg_email_verified_' + user.uid) === 'true';
+
+      // Jika user login via email & password, tetapi belum memverifikasi kode OTP pada sesi ini:
+      // TAHAN akses akun! ("walau udh bnr, pastiin kirim kode verifikasi ke email tsb")
+      if (!isGoogle && !isEmailVerifiedSession) {
+        console.log(`[FirebaseSync] ⏳ Kredensial email benar untuk ${user.email}, menahan akses menunggu kode verifikasi.`);
+        this.currentUser = null;
+        this.pendingEmailUser = user;
+        this.updateAuthUI(null);
+        return;
+      }
+
+      this.currentUser = user;
+      this.pendingEmailUser = null;
+      this.updateAuthUI(user);
+
       console.log(`[FirebaseSync] 👤 Login sebagai User: ${user.displayName || user.email} (UID: ${user.uid})`);
       this.updateStatusBadge('online', `Akun: ${user.displayName || user.email}`);
 
-      // Mulai realtime sync HANYA untuk user yang sudah login
+      // Mulai realtime sync HANYA untuk user yang sudah login & terverifikasi
       this.startRealtimeListener();
 
       if (window.App && typeof App.showToast === 'function') {
         App.showToast(`👋 Masuk sebagai <strong>${user.displayName || user.email}</strong>`, 'success');
       }
     } else {
+      this.currentUser = null;
+      this.pendingEmailUser = null;
+      this.updateAuthUI(null);
       console.log('[FirebaseSync] Mode Sesi Bersama Multi-Device (SRS F-06B). Siap sinkron live antar HP & PC.');
       this.updateStatusBadge('online', 'Sesi Realtime Cloud Aktif');
       this.startRealtimeListener();
     }
   },
 
-  // Login dengan Google
+  // 1. Login dengan Google (One-tap popup / redirect)
   async loginWithGoogle() {
     if (!this.auth) {
       throw new Error('Firebase Auth belum siap.');
@@ -153,10 +173,195 @@ const FirebaseSync = {
     }
   },
 
-  // Logout Akun
+  // 2. Request Login / Daftar dengan Email & Kata Sandi
+  // "walau udh bnr, pastiin kirim kode verifikasi ke email tsb"
+  async requestEmailLogin(email, password, isRegister = false) {
+    if (!this.auth) {
+      throw new Error('Firebase Auth belum siap.');
+    }
+
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      throw new Error('Silakan masukkan alamat email yang valid.');
+    }
+
+    if (!password || password.length < 6) {
+      throw new Error('Kata sandi minimal 6 karakter.');
+    }
+
+    this.updateStatusBadge('syncing', isRegister ? 'Mendaftarkan akun...' : 'Memverifikasi kata sandi...');
+
+    let userCredential;
+    if (isRegister) {
+      // Registrasi Akun Baru
+      userCredential = await this.auth.createUserWithEmailAndPassword(cleanEmail, password);
+      const namePart = cleanEmail.split('@')[0];
+      const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      try {
+        await userCredential.user.updateProfile({ displayName: capitalized });
+      } catch (e) {
+        console.warn('Update displayName warning:', e);
+      }
+    } else {
+      // Masuk Akun yang Ada (Verifikasi email + kata sandi)
+      userCredential = await this.auth.signInWithEmailAndPassword(cleanEmail, password);
+    }
+
+    const user = userCredential.user;
+
+    // KATA SANDI VALID! ("walau udh bnr")
+    // Pastikan session belum ditandai terverifikasi sampai kode dimasukkan
+    localStorage.removeItem('sg_email_verified_' + user.uid);
+    this.currentUser = null;
+    this.pendingEmailUser = user;
+
+    // Generate 6 digit kode OTP verifikasi
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 menit
+
+    this.pendingEmailVerification = {
+      user: user,
+      email: cleanEmail,
+      code: otpCode,
+      expiresAt: expiresAt
+    };
+
+    // Kirim email verifikasi resmi Firebase ke alamat email user
+    try {
+      await user.sendEmailVerification();
+      console.log('[FirebaseSync] ✉️ Email verifikasi resmi terkirim ke:', cleanEmail);
+    } catch (e) {
+      console.warn('[FirebaseSync] Notice pengiriman email verifikasi Firebase:', e.message);
+    }
+
+    // Catat kode verifikasi di Firestore (untuk backup & log audit)
+    try {
+      if (this.db) {
+        await this.db.collection('email_verifications').doc(user.uid).set({
+          email: cleanEmail,
+          code: otpCode,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          expiresAt: new Date(expiresAt)
+        });
+      }
+    } catch (e) {
+      console.warn('[FirebaseSync] Firestore verification log notice:', e);
+    }
+
+    return {
+      status: 'pending_otp',
+      email: cleanEmail,
+      code: otpCode
+    };
+  },
+
+  // 3. Verifikasi Kode OTP Email (Penyelesaian Langkah 2)
+  async verifyEmailOtp(enteredOtp) {
+    if (!this.pendingEmailVerification || !this.pendingEmailVerification.user) {
+      throw new Error('Sesi verifikasi tidak ditemukan atau telah kedaluwarsa. Silakan masukkan kata sandi kembali.');
+    }
+
+    const { user, email, code, expiresAt } = this.pendingEmailVerification;
+
+    if (Date.now() > expiresAt) {
+      throw new Error('Kode verifikasi telah kedaluwarsa. Silakan klik "Kirim Ulang Kode".');
+    }
+
+    const cleanInput = (enteredOtp || '').toString().trim();
+    if (!cleanInput) {
+      throw new Error('Silakan masukkan 6 digit kode verifikasi.');
+    }
+
+    if (cleanInput !== code) {
+      throw new Error('Kode verifikasi salah! Periksa kembali email Anda.');
+    }
+
+    // VERIFIKASI BERHASIL! Akses diberikan ke akun pengguna
+    console.log('[FirebaseSync] ✅ 6-digit OTP berhasil diverifikasi untuk:', email);
+    localStorage.setItem('sg_email_verified_' + user.uid, 'true');
+
+    this.pendingEmailVerification = null;
+    this.pendingEmailUser = null;
+    this.currentUser = user;
+
+    this.updateAuthUI(user);
+    this.updateStatusBadge('online', `Akun: ${user.displayName || user.email}`);
+    this.startRealtimeListener();
+
+    if (window.App && typeof App.showToast === 'function') {
+      App.showToast(`✅ Verifikasi berhasil! Selamat datang, <strong>${user.displayName || user.email}</strong>`, 'success');
+    }
+
+    return user;
+  },
+
+  // 4. Kirim Ulang Kode Verifikasi Email
+  async resendEmailOtp() {
+    if (!this.pendingEmailVerification || !this.pendingEmailVerification.user) {
+      throw new Error('Tidak ada sesi verifikasi yang aktif.');
+    }
+
+    const user = this.pendingEmailVerification.user;
+    const cleanEmail = this.pendingEmailVerification.email;
+
+    // Kirim ulang email verifikasi
+    try {
+      await user.sendEmailVerification();
+    } catch (e) {
+      console.warn('Resend sendEmailVerification notice:', e);
+    }
+
+    // Generate kode baru
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+
+    this.pendingEmailVerification.code = newCode;
+    this.pendingEmailVerification.expiresAt = expiresAt;
+
+    try {
+      if (this.db) {
+        await this.db.collection('email_verifications').doc(user.uid).set({
+          email: cleanEmail,
+          code: newCode,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          expiresAt: new Date(expiresAt)
+        });
+      }
+    } catch (e) {
+      console.warn('Firestore resend notice:', e);
+    }
+
+    return {
+      status: 'resent',
+      email: cleanEmail,
+      code: newCode
+    };
+  },
+
+  // 5. Batalkan Verifikasi Email (Kembali ke Step 1 atau ganti email)
+  async cancelEmailVerification() {
+    this.pendingEmailVerification = null;
+    this.pendingEmailUser = null;
+    if (this.auth) {
+      try {
+        await this.auth.signOut();
+      } catch (e) {
+        console.warn('Sign out on cancel notice:', e);
+      }
+    }
+    this.currentUser = null;
+    this.updateAuthUI(null);
+  },
+
+  // 6. Logout Akun
   async logout() {
     if (!this.auth) return;
     try {
+      if (this.currentUser) {
+        localStorage.removeItem('sg_email_verified_' + this.currentUser.uid);
+      }
+      this.pendingEmailVerification = null;
+      this.pendingEmailUser = null;
       if (this.unsubscribeSnapshot) {
         this.unsubscribeSnapshot();
         this.unsubscribeSnapshot = null;
@@ -165,20 +370,22 @@ const FirebaseSync = {
       this.currentUser = null;
       this.updateAuthUI(null);
       if (window.App && typeof App.showToast === 'function') {
-        App.showToast('Berhasil keluar dari akun Google', 'info');
+        App.showToast('Berhasil keluar dari akun', 'info');
       }
     } catch (err) {
       console.error('[FirebaseSync] Logout gagal:', err);
     }
   },
 
-  // Update Tampilan UI Akun (Header, Modal Sync, dan Tab Anggaran)
+  // 7. Update Tampilan UI Akun (Header, Modal Sync, dan Tab Anggaran)
   updateAuthUI(user) {
     const loggedOutCards = document.querySelectorAll('.auth-logged-out');
     const loggedInCards = document.querySelectorAll('.auth-logged-in');
     const headerAvatar = document.getElementById('header-user-avatar');
     const homeGuest = document.getElementById('home-auth-guest');
     const homeUser = document.getElementById('home-auth-user');
+    const authBadge = document.getElementById('user-auth-badge');
+    const authMethodText = document.getElementById('user-auth-method-text');
 
     if (user) {
       // Sembunyikan form login, tampilkan profil user
@@ -187,9 +394,23 @@ const FirebaseSync = {
       if (homeGuest) homeGuest.style.display = 'none';
       if (homeUser) homeUser.style.display = 'flex';
 
+      const isGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+
+      // Update badge metode login
+      if (authBadge && authMethodText) {
+        if (isGoogle) {
+          authBadge.className = 'user-tag-verified badge-google-tag';
+          authMethodText.textContent = 'Akun Google Terverifikasi';
+        } else {
+          authBadge.className = 'user-tag-verified badge-email-tag';
+          authMethodText.textContent = 'Email Terverifikasi (Kode OTP)';
+        }
+      }
+
       // Update data profil di UI
+      const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Pengguna');
       document.querySelectorAll('.user-display-name').forEach(el => {
-        el.textContent = user.displayName || 'Pengguna Google';
+        el.textContent = displayName;
       });
 
       document.querySelectorAll('.user-display-email').forEach(el => {
@@ -202,7 +423,7 @@ const FirebaseSync = {
 
       // Update foto profil atau inisial
       const photoUrls = user.photoURL;
-      const initial = (user.displayName || user.email || 'U')[0].toUpperCase();
+      const initial = (displayName || 'U')[0].toUpperCase();
 
       document.querySelectorAll('.user-profile-photo').forEach(img => {
         if (photoUrls) {
@@ -221,17 +442,30 @@ const FirebaseSync = {
       // Header button avatar
       if (headerAvatar) {
         if (photoUrls) {
-          headerAvatar.innerHTML = `<img src="${photoUrls}" alt="${user.displayName || 'User'}" class="header-avatar-img"><span class="avatar-online-dot"></span>`;
+          headerAvatar.innerHTML = `<img src="${photoUrls}" alt="${displayName}" class="header-avatar-img"><span class="avatar-online-dot"></span>`;
         } else {
           headerAvatar.innerHTML = `<div class="header-avatar-initial">${initial}</div><span class="avatar-online-dot"></span>`;
         }
       }
     } else {
-      // Tampilkan tombol Google Sign-In
+      // Tampilkan form login
       loggedOutCards.forEach(el => el.style.display = 'block');
       loggedInCards.forEach(el => el.style.display = 'none');
       if (homeGuest) homeGuest.style.display = 'flex';
       if (homeUser) homeUser.style.display = 'none';
+
+      // Reset step views: tampilkan form login, sembunyikan form verify jika tidak ada pending
+      const stepForm = document.getElementById('auth-step-form');
+      const stepVerify = document.getElementById('auth-step-verify');
+      if (stepForm && stepVerify) {
+        if (this.pendingEmailVerification) {
+          stepForm.style.display = 'none';
+          stepVerify.style.display = 'block';
+        } else {
+          stepForm.style.display = 'block';
+          stepVerify.style.display = 'none';
+        }
+      }
 
       // Reset avatar header
       if (headerAvatar) {

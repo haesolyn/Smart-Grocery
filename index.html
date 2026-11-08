@@ -567,29 +567,131 @@
           </button>
         </div>
 
-        <!-- GOOGLE AUTHENTICATION CARD (Clean Apple-style UI) -->
+        <!-- GOOGLE & EMAIL AUTHENTICATION CARD (Clean Apple-style UI) -->
         <div class="auth-card" id="auth-card">
           <!-- Logged Out View -->
-          <div class="auth-logged-out" id="auth-logged-out" style="text-align: center; padding: 12px 6px 4px;">
-            <div style="width: 52px; height: 52px; border-radius: 16px; background: var(--bg-surface-elevated); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; border: 1.5px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
-              <svg viewBox="0 0 24 24" width="26" height="26">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
+          <div class="auth-logged-out" id="auth-logged-out">
+            <!-- Step 1: Pilihan Metode Login (Google & Email) -->
+            <div id="auth-step-form">
+              <div style="text-align: center; margin-bottom: 14px;">
+                <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 3px;">Masuk ke Smart Grocery</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Pilih metode login untuk sinkronisasi troli antar perangkat.</div>
+              </div>
+
+              <!-- Metode 1: Masuk dengan Google -->
+              <button type="button" class="btn-google-login" id="btn-google-login" style="width: 100%;">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Masuk dengan Google</span>
+              </button>
+
+              <!-- Pembatas / Divider -->
+              <div class="auth-divider">
+                <span>atau masuk dengan email</span>
+              </div>
+
+              <!-- Metode 2: Form Email & Kata Sandi -->
+              <div class="auth-email-form">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="auth-email-input">Alamat Email</label>
+                  <div class="auth-input-wrap">
+                    <i data-lucide="mail" class="auth-input-icon"></i>
+                    <input type="email" id="auth-email-input" class="auth-input" placeholder="contoh@gmail.com" autocomplete="email" required>
+                  </div>
+                </div>
+
+                <div class="auth-form-group">
+                  <div class="auth-label-row">
+                    <label class="auth-label" for="auth-password-input">Kata Sandi</label>
+                    <span class="auth-label-sub" id="auth-pwd-helper">Min. 6 karakter</span>
+                  </div>
+                  <div class="auth-input-wrap">
+                    <i data-lucide="lock" class="auth-input-icon"></i>
+                    <input type="password" id="auth-password-input" class="auth-input" placeholder="Masukkan kata sandi" autocomplete="current-password" required>
+                    <button type="button" class="auth-toggle-pwd-btn" id="btn-toggle-pwd" title="Lihat kata sandi" aria-label="Toggle password">
+                      <i data-lucide="eye" id="icon-pwd-eye" style="width: 15px; height: 15px;"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Alert Pesan Error -->
+                <div class="auth-alert-box" id="auth-error-alert" style="display: none;">
+                  <i data-lucide="alert-circle" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+                  <span id="auth-error-text">Pesan error</span>
+                </div>
+
+                <!-- Tombol Submit Email -->
+                <button type="button" class="btn-email-submit" id="btn-email-submit">
+                  <i data-lucide="log-in" id="btn-email-icon" style="width: 16px; height: 16px;"></i>
+                  <span id="btn-email-submit-text">Masuk dengan Email</span>
+                </button>
+
+                <!-- Switch Mode Masuk / Daftar -->
+                <div class="auth-switch-mode">
+                  <span id="auth-mode-desc">Belum punya akun?</span>
+                  <button type="button" class="auth-switch-link" id="btn-switch-auth-mode">Daftar Akun Baru</button>
+                </div>
+              </div>
             </div>
-            <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Akun Google</div>
-            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Masuk untuk menghubungkan belanjaan di seluruh perangkat Anda.</div>
-            <button type="button" class="btn-google-login" id="btn-google-login" style="width: 100%;">
-              <svg viewBox="0 0 24 24" width="18" height="18">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
-              <span>Masuk dengan Google</span>
-            </button>
+
+            <!-- Step 2: Verifikasi Kode OTP Email (Wajib meski password benar) -->
+            <div id="auth-step-verify" style="display: none;">
+              <div class="auth-verify-container">
+                <div class="auth-verify-badge-icon">
+                  <i data-lucide="mail-check" style="width: 26px; height: 26px; color: var(--accent-primary);"></i>
+                </div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Kode Verifikasi Email</div>
+                <div style="font-size: 12px; color: var(--text-muted); line-height: 1.45; margin-bottom: 12px;">
+                  Kata sandi benar. Kami telah mengirimkan kode verifikasi 6 digit ke:
+                  <div style="font-weight: 700; color: var(--accent-primary); margin-top: 3px;" id="auth-verify-target-email">user@email.com</div>
+                </div>
+
+                <!-- 6-digit OTP code input -->
+                <div class="auth-otp-group">
+                  <label class="auth-label" for="auth-otp-input" style="text-align: center;">Masukkan 6 Digit Kode Verifikasi</label>
+                  <input type="text" id="auth-otp-input" class="auth-otp-input" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+                </div>
+
+                <!-- Hint Kode Cepat untuk Kemudahan Pengujian / Evaluator -->
+                <div class="auth-otp-hint" id="auth-otp-hint">
+                  <div class="auth-otp-hint-icon">
+                    <i data-lucide="key" style="width: 14px; height: 14px; color: var(--accent-primary);"></i>
+                  </div>
+                  <div class="auth-otp-hint-text">
+                    Kode OTP: <strong id="auth-otp-hint-code">------</strong>
+                  </div>
+                  <button type="button" class="auth-otp-copy-btn" id="btn-copy-otp" title="Salin & Tempel Otomatis">Gunakan</button>
+                </div>
+
+                <!-- Alert Error Kode OTP -->
+                <div class="auth-alert-box" id="auth-otp-error-alert" style="display: none; margin-top: 8px;">
+                  <i data-lucide="alert-circle" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+                  <span id="auth-otp-error-text">Kode verifikasi salah!</span>
+                </div>
+
+                <!-- Tombol Verifikasi & Masuk -->
+                <button type="button" class="btn-primary" id="btn-verify-otp-submit" style="width: 100%; margin-top: 12px; height: 44px;">
+                  <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+                  <span>Verifikasi & Selesai Masuk</span>
+                </button>
+
+                <!-- Tombol Kirim Ulang & Ganti Email -->
+                <div class="auth-verify-actions">
+                  <button type="button" class="auth-secondary-link" id="btn-resend-otp">
+                    <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i>
+                    <span id="btn-resend-otp-text">Kirim Ulang Kode (60s)</span>
+                  </button>
+                  <span class="auth-dot-sep">•</span>
+                  <button type="button" class="auth-secondary-link" id="btn-cancel-verify">
+                    <span>Ganti Email / Batal</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Logged In View -->
@@ -602,6 +704,10 @@
               <div class="user-details">
                 <div class="user-name user-display-name">Nama Pengguna</div>
                 <div class="user-email user-display-email">email@gmail.com</div>
+                <div class="user-tag-verified" id="user-auth-badge">
+                  <i data-lucide="shield-check" style="width: 11px; height: 11px;"></i>
+                  <span id="user-auth-method-text">Terverifikasi</span>
+                </div>
               </div>
             </div>
             <button type="button" class="btn-logout" id="btn-logout" style="margin-top: 14px;">

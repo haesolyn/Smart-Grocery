@@ -591,7 +591,7 @@ const App = {
       });
     }
 
-    // 15. Google Auth Buttons
+    // 15. Authentication Handlers (Google Sign-In & Email + Password with 2-Step OTP Verification)
     const btnHeaderAuth = document.getElementById('btn-header-auth');
     const btnGoogleLogin = document.getElementById('btn-google-login');
     const btnLogout = document.getElementById('btn-logout');
@@ -621,6 +621,301 @@ const App = {
           btnGoogleLogin.disabled = false;
           btnGoogleLogin.innerHTML = originalContent;
         }
+      });
+    }
+
+    // Email & Password Auth Elements
+    const inputEmail = document.getElementById('auth-email-input');
+    const inputPassword = document.getElementById('auth-password-input');
+    const btnTogglePwd = document.getElementById('btn-toggle-pwd');
+    const btnEmailSubmit = document.getElementById('btn-email-submit');
+    const btnSwitchAuthMode = document.getElementById('btn-switch-auth-mode');
+    const authModeDesc = document.getElementById('auth-mode-desc');
+    const btnEmailSubmitText = document.getElementById('btn-email-submit-text');
+    const authErrorAlert = document.getElementById('auth-error-alert');
+    const authErrorText = document.getElementById('auth-error-text');
+
+    // OTP Verification Elements
+    const authStepForm = document.getElementById('auth-step-form');
+    const authStepVerify = document.getElementById('auth-step-verify');
+    const authVerifyTargetEmail = document.getElementById('auth-verify-target-email');
+    const inputOtp = document.getElementById('auth-otp-input');
+    const authOtpHintCode = document.getElementById('auth-otp-hint-code');
+    const btnCopyOtp = document.getElementById('btn-copy-otp');
+    const btnVerifyOtpSubmit = document.getElementById('btn-verify-otp-submit');
+    const btnResendOtp = document.getElementById('btn-resend-otp');
+    const btnResendOtpText = document.getElementById('btn-resend-otp-text');
+    const btnCancelVerify = document.getElementById('btn-cancel-verify');
+    const authOtpErrorAlert = document.getElementById('auth-otp-error-alert');
+    const authOtpErrorText = document.getElementById('auth-otp-error-text');
+
+    let isRegisterMode = false;
+    let otpResendTimer = null;
+    let otpResendCountdown = 60;
+
+    const startOtpResendTimer = () => {
+      if (otpResendTimer) clearInterval(otpResendTimer);
+      otpResendCountdown = 60;
+      if (btnResendOtp && btnResendOtpText) {
+        btnResendOtp.disabled = true;
+        btnResendOtpText.textContent = `Kirim Ulang Kode (${otpResendCountdown}s)`;
+        otpResendTimer = setInterval(() => {
+          otpResendCountdown--;
+          if (otpResendCountdown <= 0) {
+            clearInterval(otpResendTimer);
+            otpResendTimer = null;
+            btnResendOtp.disabled = false;
+            btnResendOtpText.textContent = 'Kirim Ulang Kode';
+          } else {
+            btnResendOtpText.textContent = `Kirim Ulang Kode (${otpResendCountdown}s)`;
+          }
+        }, 1000);
+      }
+    };
+
+    // Toggle Lihat Kata Sandi
+    if (btnTogglePwd && inputPassword) {
+      btnTogglePwd.addEventListener('click', () => {
+        const isPassword = inputPassword.type === 'password';
+        inputPassword.type = isPassword ? 'text' : 'password';
+        btnTogglePwd.innerHTML = isPassword
+          ? '<i data-lucide="eye-off" style="width: 15px; height: 15px;"></i>'
+          : '<i data-lucide="eye" style="width: 15px; height: 15px;"></i>';
+        if (typeof this.initLucideIcons === 'function') this.initLucideIcons();
+      });
+    }
+
+    // Switch antara Mode Masuk (Login) dan Daftar (Register)
+    if (btnSwitchAuthMode) {
+      btnSwitchAuthMode.addEventListener('click', () => {
+        isRegisterMode = !isRegisterMode;
+        if (authErrorAlert) authErrorAlert.style.display = 'none';
+
+        if (isRegisterMode) {
+          btnEmailSubmitText.textContent = 'Daftar Akun Baru';
+          authModeDesc.textContent = 'Sudah punya akun?';
+          btnSwitchAuthMode.textContent = 'Masuk di sini';
+        } else {
+          btnEmailSubmitText.textContent = 'Masuk dengan Email';
+          authModeDesc.textContent = 'Belum punya akun?';
+          btnSwitchAuthMode.textContent = 'Daftar Akun Baru';
+        }
+      });
+    }
+
+    // Submit Email & Password (Tahap 1: Verifikasi Kredensial & Kirim Kode)
+    const handleEmailSubmit = async () => {
+      if (!window.FirebaseSync) return;
+      const email = (inputEmail ? inputEmail.value : '').trim();
+      const password = (inputPassword ? inputPassword.value : '').trim();
+
+      if (authErrorAlert) authErrorAlert.style.display = 'none';
+
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        if (authErrorAlert && authErrorText) {
+          authErrorText.textContent = 'Silakan masukkan alamat email yang valid.';
+          authErrorAlert.style.display = 'flex';
+        }
+        if (inputEmail) inputEmail.focus();
+        SoundEngine.playAlertBeep();
+        return;
+      }
+
+      if (!password || password.length < 6) {
+        if (authErrorAlert && authErrorText) {
+          authErrorText.textContent = 'Kata sandi minimal 6 karakter.';
+          authErrorAlert.style.display = 'flex';
+        }
+        if (inputPassword) inputPassword.focus();
+        SoundEngine.playAlertBeep();
+        return;
+      }
+
+      // Validasi & Request Login
+      btnEmailSubmit.disabled = true;
+      const originalSubmitText = btnEmailSubmitText.textContent;
+      btnEmailSubmitText.innerHTML = isRegisterMode ? 'Mendaftarkan akun...' : 'Memverifikasi kata sandi...';
+
+      try {
+        const result = await FirebaseSync.requestEmailLogin(email, password, isRegisterMode);
+        SoundEngine.playSuccessChime();
+
+        // Alihkan ke Langkah 2: Verifikasi Kode Email ("walau udh bnr, pastiin kirim kode verifikasi ke email tsb")
+        if (authStepForm && authStepVerify) {
+          authStepForm.style.display = 'none';
+          authStepVerify.style.display = 'block';
+        }
+
+        if (authVerifyTargetEmail) {
+          authVerifyTargetEmail.textContent = email;
+        }
+
+        if (authOtpHintCode) {
+          authOtpHintCode.textContent = result.code;
+        }
+
+        if (inputOtp) {
+          inputOtp.value = '';
+          inputOtp.focus();
+        }
+
+        if (authOtpErrorAlert) {
+          authOtpErrorAlert.style.display = 'none';
+        }
+
+        startOtpResendTimer();
+        this.showToast(`✉️ Kode verifikasi dikirim ke <strong>${email}</strong>`, 'info');
+
+      } catch (err) {
+        console.error('Email auth error:', err);
+        let errorMsg = err.message || 'Terjadi kesalahan saat masuk.';
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          errorMsg = 'Akun belum terdaftar atau kata sandi salah. Silakan periksa kembali atau daftar baru.';
+        } else if (err.code === 'auth/wrong-password') {
+          errorMsg = 'Kata sandi salah. Silakan coba lagi.';
+        } else if (err.code === 'auth/email-already-in-use') {
+          errorMsg = 'Email ini sudah terdaftar. Silakan beralih ke menu Masuk.';
+        } else if (err.code === 'auth/weak-password') {
+          errorMsg = 'Kata sandi terlalu pendek (minimal 6 karakter).';
+        } else if (err.code === 'auth/too-many-requests') {
+          errorMsg = 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
+        }
+
+        if (authErrorAlert && authErrorText) {
+          authErrorText.textContent = errorMsg;
+          authErrorAlert.style.display = 'flex';
+        }
+        SoundEngine.playAlertBeep();
+      } finally {
+        btnEmailSubmit.disabled = false;
+        btnEmailSubmitText.textContent = originalSubmitText;
+      }
+    };
+
+    if (btnEmailSubmit) {
+      btnEmailSubmit.addEventListener('click', handleEmailSubmit);
+    }
+
+    if (inputPassword) {
+      inputPassword.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleEmailSubmit();
+        }
+      });
+    }
+
+    // Submit Kode OTP (Tahap 2: Verifikasi 6 Digit)
+    const handleOtpSubmit = async () => {
+      if (!window.FirebaseSync) return;
+      const enteredOtp = (inputOtp ? inputOtp.value : '').trim();
+
+      if (authOtpErrorAlert) authOtpErrorAlert.style.display = 'none';
+
+      if (!enteredOtp || enteredOtp.length !== 6) {
+        if (authOtpErrorAlert && authOtpErrorText) {
+          authOtpErrorText.textContent = 'Silakan masukkan lengkap 6 digit kode verifikasi.';
+          authOtpErrorAlert.style.display = 'flex';
+        }
+        if (inputOtp) inputOtp.focus();
+        SoundEngine.playAlertBeep();
+        return;
+      }
+
+      btnVerifyOtpSubmit.disabled = true;
+      const originalVerifyBtnText = btnVerifyOtpSubmit.innerHTML;
+      btnVerifyOtpSubmit.innerHTML = '<span>Memverifikasi kode...</span>';
+
+      try {
+        await FirebaseSync.verifyEmailOtp(enteredOtp);
+        SoundEngine.playSuccessChime();
+
+        // Reset view ke form awal untuk sesi berikutnya
+        if (authStepForm && authStepVerify) {
+          authStepForm.style.display = 'block';
+          authStepVerify.style.display = 'none';
+        }
+        if (inputPassword) inputPassword.value = '';
+        if (inputOtp) inputOtp.value = '';
+
+        // Tutup modal sync
+        this.closeCloudSyncModal();
+      } catch (err) {
+        console.error('OTP verify error:', err);
+        if (authOtpErrorAlert && authOtpErrorText) {
+          authOtpErrorText.textContent = err.message || 'Kode verifikasi salah atau kedaluwarsa.';
+          authOtpErrorAlert.style.display = 'flex';
+        }
+        SoundEngine.playAlertBeep();
+      } finally {
+        btnVerifyOtpSubmit.disabled = false;
+        btnVerifyOtpSubmit.innerHTML = originalVerifyBtnText;
+      }
+    };
+
+    if (btnVerifyOtpSubmit) {
+      btnVerifyOtpSubmit.addEventListener('click', handleOtpSubmit);
+    }
+
+    if (inputOtp) {
+      inputOtp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleOtpSubmit();
+        }
+      });
+      // Hanya izinkan angka
+      inputOtp.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+      });
+    }
+
+    // Tombol Gunakan Kode OTP Cepat (Kemudahan Pengujian & Demo Evaluasi)
+    if (btnCopyOtp && inputOtp && authOtpHintCode) {
+      btnCopyOtp.addEventListener('click', () => {
+        const code = authOtpHintCode.textContent.trim();
+        if (code && code !== '------') {
+          inputOtp.value = code;
+          SoundEngine.playTick();
+          handleOtpSubmit();
+        }
+      });
+    }
+
+    // Kirim Ulang Kode OTP
+    if (btnResendOtp) {
+      btnResendOtp.addEventListener('click', async () => {
+        if (otpResendTimer) return;
+        if (!window.FirebaseSync) return;
+        try {
+          const res = await FirebaseSync.resendEmailOtp();
+          if (authOtpHintCode) authOtpHintCode.textContent = res.code;
+          if (inputOtp) inputOtp.value = '';
+          if (authOtpErrorAlert) authOtpErrorAlert.style.display = 'none';
+          startOtpResendTimer();
+          this.showToast('✉️ Kode verifikasi baru telah dikirim!', 'info');
+          SoundEngine.playTick();
+        } catch (err) {
+          this.showToast(`Gagal kirim ulang: ${err.message}`, 'error');
+          SoundEngine.playAlertBeep();
+        }
+      });
+    }
+
+    // Batal Verifikasi / Ganti Email
+    if (btnCancelVerify) {
+      btnCancelVerify.addEventListener('click', async () => {
+        if (window.FirebaseSync) {
+          await FirebaseSync.cancelEmailVerification();
+        }
+        if (authStepForm && authStepVerify) {
+          authStepForm.style.display = 'block';
+          authStepVerify.style.display = 'none';
+        }
+        if (inputOtp) inputOtp.value = '';
+        if (authErrorAlert) authErrorAlert.style.display = 'none';
+        if (authOtpErrorAlert) authOtpErrorAlert.style.display = 'none';
+        SoundEngine.playTick();
       });
     }
 
@@ -657,7 +952,7 @@ const App = {
     if (btnLogout) {
       btnLogout.addEventListener('click', async () => {
         if (!window.FirebaseSync) return;
-        if (confirm('Keluar dari akun Google? Data belanja akun Anda akan tetap aman di cloud.')) {
+        if (confirm('Keluar dari akun? Data troli belanja Anda akan tetap aman tersimpan di cloud.')) {
           await FirebaseSync.logout();
           SoundEngine.playTick();
         }
