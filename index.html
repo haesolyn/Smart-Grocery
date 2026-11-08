@@ -607,7 +607,10 @@
                 <div class="auth-form-group">
                   <div class="auth-label-row">
                     <label class="auth-label" for="auth-password-input">Kata Sandi</label>
-                    <span class="auth-label-sub" id="auth-pwd-helper">Min. 6 karakter</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <button type="button" class="auth-forgot-link" id="btn-forgot-password">Lupa sandi?</button>
+                      <span class="auth-label-sub" id="auth-pwd-helper">Min. 6 karakter</span>
+                    </div>
                   </div>
                   <div class="auth-input-wrap">
                     <i data-lucide="lock" class="auth-input-icon"></i>
@@ -618,10 +621,18 @@
                   </div>
                 </div>
 
-                <!-- Alert Pesan Error -->
+                <!-- Alert Pesan Error Dinamis & Interaktif -->
                 <div class="auth-alert-box" id="auth-error-alert" style="display: none;">
-                  <i data-lucide="alert-circle" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
-                  <span id="auth-error-text">Pesan error</span>
+                  <div class="auth-alert-content">
+                    <div class="auth-alert-title-row">
+                      <i data-lucide="alert-circle" id="auth-error-icon" style="width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px;"></i>
+                      <span id="auth-error-text">Pesan error</span>
+                    </div>
+                    <div class="auth-alert-actions" id="auth-error-actions" style="display: none;">
+                      <button type="button" class="btn-alert-action" id="btn-alert-switch-mode" style="display: none;">Beralih ke Masuk</button>
+                      <button type="button" class="btn-alert-action" id="btn-alert-reset-pwd" style="display: none;">Reset Sandi via Email</button>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Tombol Submit Email -->

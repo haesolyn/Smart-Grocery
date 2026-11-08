@@ -628,12 +628,16 @@ const App = {
     const inputEmail = document.getElementById('auth-email-input');
     const inputPassword = document.getElementById('auth-password-input');
     const btnTogglePwd = document.getElementById('btn-toggle-pwd');
+    const btnForgotPassword = document.getElementById('btn-forgot-password');
     const btnEmailSubmit = document.getElementById('btn-email-submit');
     const btnSwitchAuthMode = document.getElementById('btn-switch-auth-mode');
     const authModeDesc = document.getElementById('auth-mode-desc');
     const btnEmailSubmitText = document.getElementById('btn-email-submit-text');
     const authErrorAlert = document.getElementById('auth-error-alert');
     const authErrorText = document.getElementById('auth-error-text');
+    const authErrorActions = document.getElementById('auth-error-actions');
+    const btnAlertSwitchMode = document.getElementById('btn-alert-switch-mode');
+    const btnAlertResetPwd = document.getElementById('btn-alert-reset-pwd');
 
     // OTP Verification Elements
     const authStepForm = document.getElementById('auth-step-form');
@@ -689,7 +693,11 @@ const App = {
     if (btnSwitchAuthMode) {
       btnSwitchAuthMode.addEventListener('click', () => {
         isRegisterMode = !isRegisterMode;
-        if (authErrorAlert) authErrorAlert.style.display = 'none';
+        if (authErrorAlert) {
+          authErrorAlert.style.display = 'none';
+          authErrorAlert.className = 'auth-alert-box';
+        }
+        if (authErrorActions) authErrorActions.style.display = 'none';
 
         if (isRegisterMode) {
           btnEmailSubmitText.textContent = 'Daftar Akun Baru';
@@ -703,18 +711,71 @@ const App = {
       });
     }
 
+    // Handler Reset Kata Sandi via Email
+    const handlePasswordReset = async () => {
+      if (!window.FirebaseSync) return;
+      const email = (inputEmail ? inputEmail.value : '').trim();
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        if (authErrorAlert && authErrorText) {
+          authErrorAlert.className = 'auth-alert-box';
+          authErrorText.textContent = 'Silakan ketikkan alamat email Anda pada kotak di atas terlebih dahulu.';
+          authErrorAlert.style.display = 'block';
+          if (authErrorActions) authErrorActions.style.display = 'none';
+        }
+        if (inputEmail) inputEmail.focus();
+        SoundEngine.playAlertBeep();
+        return;
+      }
+
+      try {
+        await FirebaseSync.sendPasswordReset(email);
+        SoundEngine.playSuccessChime();
+        if (authErrorAlert && authErrorText) {
+          authErrorAlert.className = 'auth-alert-box state-success';
+          authErrorText.textContent = `✉️ Tautan pengaturan kata sandi telah dikirim ke ${email}. Buka email Anda untuk mengatur sandi baru, lalu kembali ke sini untuk masuk.`;
+          authErrorAlert.style.display = 'block';
+          if (authErrorActions) authErrorActions.style.display = 'none';
+        }
+        this.showToast(`Tautan reset sandi dikirim ke ${email}`, 'success');
+      } catch (err) {
+        console.error('Password reset error:', err);
+        if (authErrorAlert && authErrorText) {
+          authErrorAlert.className = 'auth-alert-box';
+          authErrorText.textContent = `Gagal mengirim reset sandi: ${err.message}`;
+          authErrorAlert.style.display = 'block';
+        }
+        SoundEngine.playAlertBeep();
+      }
+    };
+
+    if (btnForgotPassword) {
+      btnForgotPassword.addEventListener('click', handlePasswordReset);
+    }
+    if (btnAlertResetPwd) {
+      btnAlertResetPwd.addEventListener('click', handlePasswordReset);
+    }
+    if (btnAlertSwitchMode) {
+      btnAlertSwitchMode.addEventListener('click', () => {
+        if (btnSwitchAuthMode) btnSwitchAuthMode.click();
+      });
+    }
+
     // Submit Email & Password (Tahap 1: Verifikasi Kredensial & Kirim Kode)
     const handleEmailSubmit = async () => {
       if (!window.FirebaseSync) return;
       const email = (inputEmail ? inputEmail.value : '').trim();
       const password = (inputPassword ? inputPassword.value : '').trim();
 
-      if (authErrorAlert) authErrorAlert.style.display = 'none';
+      if (authErrorAlert) {
+        authErrorAlert.style.display = 'none';
+        authErrorAlert.className = 'auth-alert-box';
+      }
+      if (authErrorActions) authErrorActions.style.display = 'none';
 
       if (!email || !email.includes('@') || !email.includes('.')) {
         if (authErrorAlert && authErrorText) {
           authErrorText.textContent = 'Silakan masukkan alamat email yang valid.';
-          authErrorAlert.style.display = 'flex';
+          authErrorAlert.style.display = 'block';
         }
         if (inputEmail) inputEmail.focus();
         SoundEngine.playAlertBeep();
@@ -724,7 +785,7 @@ const App = {
       if (!password || password.length < 6) {
         if (authErrorAlert && authErrorText) {
           authErrorText.textContent = 'Kata sandi minimal 6 karakter.';
-          authErrorAlert.style.display = 'flex';
+          authErrorAlert.style.display = 'block';
         }
         if (inputPassword) inputPassword.focus();
         SoundEngine.playAlertBeep();
@@ -769,21 +830,48 @@ const App = {
       } catch (err) {
         console.error('Email auth error:', err);
         let errorMsg = err.message || 'Terjadi kesalahan saat masuk.';
-        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-          errorMsg = 'Akun belum terdaftar atau kata sandi salah. Silakan periksa kembali atau daftar baru.';
-        } else if (err.code === 'auth/wrong-password') {
-          errorMsg = 'Kata sandi salah. Silakan coba lagi.';
-        } else if (err.code === 'auth/email-already-in-use') {
-          errorMsg = 'Email ini sudah terdaftar. Silakan beralih ke menu Masuk.';
+        let showActions = false;
+        let actionSwitchMode = false;
+        let actionResetPwd = false;
+
+        if (err.code === 'auth/email-already-in-use') {
+          // Terjadi saat mendaftar akun baru, tetapi email sudah terdaftar
+          errorMsg = 'Email ini sudah terdaftar sebelumnya. Silakan beralih ke menu Masuk atau gunakan tombol Masuk dengan Google.';
+          showActions = true;
+          actionSwitchMode = true;
+          actionResetPwd = true;
+        } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+          // Terjadi saat masuk: email & kata sandi tidak cocok
+          errorMsg = 'Kata sandi salah atau email ini sebelumnya dibuat via akun Google.';
+          showActions = true;
+          actionResetPwd = true;
+        } else if (err.code === 'auth/user-not-found') {
+          errorMsg = 'Akun dengan email ini belum terdaftar. Silakan pilih "Daftar Akun Baru".';
+          showActions = true;
+          actionSwitchMode = true;
         } else if (err.code === 'auth/weak-password') {
-          errorMsg = 'Kata sandi terlalu pendek (minimal 6 karakter).';
+          errorMsg = 'Kata sandi terlalu pendek. Gunakan minimal 6 karakter.';
         } else if (err.code === 'auth/too-many-requests') {
-          errorMsg = 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
+          errorMsg = 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau klik Reset Sandi.';
+          showActions = true;
+          actionResetPwd = true;
         }
 
         if (authErrorAlert && authErrorText) {
+          authErrorAlert.className = 'auth-alert-box';
           authErrorText.textContent = errorMsg;
-          authErrorAlert.style.display = 'flex';
+          authErrorAlert.style.display = 'block';
+
+          if (authErrorActions) {
+            authErrorActions.style.display = showActions ? 'flex' : 'none';
+            if (btnAlertSwitchMode) {
+              btnAlertSwitchMode.style.display = actionSwitchMode ? 'inline-block' : 'none';
+              btnAlertSwitchMode.textContent = isRegisterMode ? 'Beralih ke Masuk' : 'Beralih ke Daftar';
+            }
+            if (btnAlertResetPwd) {
+              btnAlertResetPwd.style.display = actionResetPwd ? 'inline-block' : 'none';
+            }
+          }
         }
         SoundEngine.playAlertBeep();
       } finally {

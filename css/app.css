@@ -3146,21 +3146,85 @@ body {
   filter: brightness(1.15);
 }
 
-/* Alert Error Box */
+.auth-forgot-link {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s;
+}
+
+.auth-forgot-link:hover {
+  opacity: 0.8;
+}
+
+/* Alert Error & Info Box */
 .auth-alert-box {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm, 8px);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 10px);
   background: rgba(244, 63, 94, 0.12);
   border: 1px solid rgba(244, 63, 94, 0.25);
   color: #f43f5e;
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.45;
   text-align: left;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+.auth-alert-box.state-success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+
+.auth-alert-content {
+  width: 100%;
+}
+
+.auth-alert-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.auth-alert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(244, 63, 94, 0.25);
+}
+
+.btn-alert-action {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(244, 63, 94, 0.16);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: 6px;
+  color: #f43f5e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-alert-action:hover {
+  background: rgba(244, 63, 94, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-alert-action:active {
+  transform: scale(0.97);
 }
 
 /* Step 2: OTP Verification Container */

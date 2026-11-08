@@ -353,7 +353,22 @@ const FirebaseSync = {
     this.updateAuthUI(null);
   },
 
-  // 6. Logout Akun
+  // 6. Kirim Tautan Reset Kata Sandi ke Email
+  async sendPasswordReset(email) {
+    if (!this.auth) {
+      throw new Error('Firebase Auth belum siap.');
+    }
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      throw new Error('Silakan masukkan alamat email yang valid.');
+    }
+
+    await this.auth.sendPasswordResetEmail(cleanEmail);
+    console.log('[FirebaseSync] ✉️ Tautan reset kata sandi terkirim ke:', cleanEmail);
+    return cleanEmail;
+  },
+
+  // 7. Logout Akun
   async logout() {
     if (!this.auth) return;
     try {
