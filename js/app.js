@@ -639,39 +639,100 @@ const App = {
     const btnAlertSwitchMode = document.getElementById('btn-alert-switch-mode');
     const btnAlertResetPwd = document.getElementById('btn-alert-reset-pwd');
 
-    // OTP Verification Elements
+    // Email Link Verification Elements
     const authStepForm = document.getElementById('auth-step-form');
     const authStepVerify = document.getElementById('auth-step-verify');
     const authVerifyTargetEmail = document.getElementById('auth-verify-target-email');
-    const inputOtp = document.getElementById('auth-otp-input');
-    const authOtpHintCode = document.getElementById('auth-otp-hint-code');
-    const btnCopyOtp = document.getElementById('btn-copy-otp');
-    const btnVerifyOtpSubmit = document.getElementById('btn-verify-otp-submit');
+    const authVerifyStatusBox = document.getElementById('auth-verify-status-box');
+    const authVerifyStatusText = document.getElementById('auth-verify-status-text');
+    const btnCheckVerifyLink = document.getElementById('btn-check-verify-link');
+    const btnCheckVerifyText = document.getElementById('btn-check-verify-text');
     const btnResendOtp = document.getElementById('btn-resend-otp');
     const btnResendOtpText = document.getElementById('btn-resend-otp-text');
     const btnCancelVerify = document.getElementById('btn-cancel-verify');
-    const authOtpErrorAlert = document.getElementById('auth-otp-error-alert');
-    const authOtpErrorText = document.getElementById('auth-otp-error-text');
 
     let isRegisterMode = false;
-    let otpResendTimer = null;
-    let otpResendCountdown = 60;
+    let emailResendTimer = null;
+    let emailResendCountdown = 60;
+    let autoVerifyInterval = null;
 
-    const startOtpResendTimer = () => {
-      if (otpResendTimer) clearInterval(otpResendTimer);
-      otpResendCountdown = 60;
+    const stopAutoVerifyPolling = () => {
+      if (autoVerifyInterval) {
+        clearInterval(autoVerifyInterval);
+        autoVerifyInterval = null;
+      }
+    };
+
+    const startAutoVerifyPolling = () => {
+      stopAutoVerifyPolling();
+      autoVerifyInterval = setInterval(async () => {
+        if (!window.FirebaseSync) return;
+        try {
+          const isVerified = await FirebaseSync.checkEmailVerificationStatus();
+          if (isVerified) {
+            stopAutoVerifyPolling();
+            SoundEngine.playSuccessChime();
+            if (authStepForm && authStepVerify) {
+              authStepForm.style.display = 'block';
+              authStepVerify.style.display = 'none';
+            }
+            if (inputPassword) inputPassword.value = '';
+            this.closeCloudSyncModal();
+          }
+        } catch (e) {
+          console.warn('Polling verification check notice:', e);
+        }
+      }, 2500);
+    };
+
+    // Auto-check verifikasi saat pengguna kembali membuka tab aplikasi
+    window.addEventListener('focus', async () => {
+      if (authStepVerify && authStepVerify.style.display === 'block' && window.FirebaseSync) {
+        const isVerified = await FirebaseSync.checkEmailVerificationStatus();
+        if (isVerified) {
+          stopAutoVerifyPolling();
+          SoundEngine.playSuccessChime();
+          if (authStepForm && authStepVerify) {
+            authStepForm.style.display = 'block';
+            authStepVerify.style.display = 'none';
+          }
+          if (inputPassword) inputPassword.value = '';
+          this.closeCloudSyncModal();
+        }
+      }
+    });
+
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible' && authStepVerify && authStepVerify.style.display === 'block' && window.FirebaseSync) {
+        const isVerified = await FirebaseSync.checkEmailVerificationStatus();
+        if (isVerified) {
+          stopAutoVerifyPolling();
+          SoundEngine.playSuccessChime();
+          if (authStepForm && authStepVerify) {
+            authStepForm.style.display = 'block';
+            authStepVerify.style.display = 'none';
+          }
+          if (inputPassword) inputPassword.value = '';
+          this.closeCloudSyncModal();
+        }
+      }
+    });
+
+    const startEmailResendTimer = () => {
+      if (emailResendTimer) clearInterval(emailResendTimer);
+      emailResendCountdown = 60;
       if (btnResendOtp && btnResendOtpText) {
         btnResendOtp.disabled = true;
-        btnResendOtpText.textContent = `Kirim Ulang Kode (${otpResendCountdown}s)`;
-        otpResendTimer = setInterval(() => {
-          otpResendCountdown--;
-          if (otpResendCountdown <= 0) {
-            clearInterval(otpResendTimer);
-            otpResendTimer = null;
+        btnResendOtpText.textContent = `Kirim Ulang Email (${emailResendCountdown}s)`;
+        emailResendTimer = setInterval(() => {
+          emailResendCountdown--;
+          if (emailResendCountdown <= 0) {
+            clearInterval(emailResendTimer);
+            emailResendTimer = null;
             btnResendOtp.disabled = false;
-            btnResendOtpText.textContent = 'Kirim Ulang Kode';
+            btnResendOtpText.textContent = 'Kirim Ulang Email';
           } else {
-            btnResendOtpText.textContent = `Kirim Ulang Kode (${otpResendCountdown}s)`;
+            btnResendOtpText.textContent = `Kirim Ulang Email (${emailResendCountdown}s)`;
           }
         }, 1000);
       }
@@ -801,7 +862,7 @@ const App = {
         const result = await FirebaseSync.requestEmailLogin(email, password, isRegisterMode);
         SoundEngine.playSuccessChime();
 
-        // Alihkan ke Langkah 2: Verifikasi Kode Email ("walau udh bnr, pastiin kirim kode verifikasi ke email tsb")
+        // Alihkan ke Langkah 2: Verifikasi Tautan Email ("walau udh bnr, pastiin kirim kode verifikasi ke email tsb")
         if (authStepForm && authStepVerify) {
           authStepForm.style.display = 'none';
           authStepVerify.style.display = 'block';
@@ -811,21 +872,14 @@ const App = {
           authVerifyTargetEmail.textContent = email;
         }
 
-        if (authOtpHintCode) {
-          authOtpHintCode.textContent = result.code;
+        if (authVerifyStatusBox && authVerifyStatusText) {
+          authVerifyStatusBox.className = 'auth-alert-box state-info';
+          authVerifyStatusText.textContent = 'Menunggu Anda mengklik tautan di email...';
         }
 
-        if (inputOtp) {
-          inputOtp.value = '';
-          inputOtp.focus();
-        }
-
-        if (authOtpErrorAlert) {
-          authOtpErrorAlert.style.display = 'none';
-        }
-
-        startOtpResendTimer();
-        this.showToast(`✉️ Kode verifikasi dikirim ke <strong>${email}</strong>`, 'info');
+        startEmailResendTimer();
+        startAutoVerifyPolling();
+        this.showToast(`✉️ Tautan verifikasi dikirim ke <strong>${email}</strong>`, 'info');
 
       } catch (err) {
         console.error('Email auth error:', err);
@@ -893,95 +947,60 @@ const App = {
       });
     }
 
-    // Submit Kode OTP (Tahap 2: Verifikasi 6 Digit)
-    const handleOtpSubmit = async () => {
-      if (!window.FirebaseSync) return;
-      const enteredOtp = (inputOtp ? inputOtp.value : '').trim();
+    // Cek Status Verifikasi Email Manual via Tombol ("Saya Sudah Klik Tautan di Email")
+    if (btnCheckVerifyLink) {
+      btnCheckVerifyLink.addEventListener('click', async () => {
+        if (!window.FirebaseSync) return;
+        btnCheckVerifyLink.disabled = true;
+        const originalText = btnCheckVerifyText ? btnCheckVerifyText.textContent : 'Memeriksa...';
+        if (btnCheckVerifyText) btnCheckVerifyText.textContent = 'Memeriksa status verifikasi...';
 
-      if (authOtpErrorAlert) authOtpErrorAlert.style.display = 'none';
-
-      if (!enteredOtp || enteredOtp.length !== 6) {
-        if (authOtpErrorAlert && authOtpErrorText) {
-          authOtpErrorText.textContent = 'Silakan masukkan lengkap 6 digit kode verifikasi.';
-          authOtpErrorAlert.style.display = 'flex';
-        }
-        if (inputOtp) inputOtp.focus();
-        SoundEngine.playAlertBeep();
-        return;
-      }
-
-      btnVerifyOtpSubmit.disabled = true;
-      const originalVerifyBtnText = btnVerifyOtpSubmit.innerHTML;
-      btnVerifyOtpSubmit.innerHTML = '<span>Memverifikasi kode...</span>';
-
-      try {
-        await FirebaseSync.verifyEmailOtp(enteredOtp);
-        SoundEngine.playSuccessChime();
-
-        // Reset view ke form awal untuk sesi berikutnya
-        if (authStepForm && authStepVerify) {
-          authStepForm.style.display = 'block';
-          authStepVerify.style.display = 'none';
-        }
-        if (inputPassword) inputPassword.value = '';
-        if (inputOtp) inputOtp.value = '';
-
-        // Tutup modal sync
-        this.closeCloudSyncModal();
-      } catch (err) {
-        console.error('OTP verify error:', err);
-        if (authOtpErrorAlert && authOtpErrorText) {
-          authOtpErrorText.textContent = err.message || 'Kode verifikasi salah atau kedaluwarsa.';
-          authOtpErrorAlert.style.display = 'flex';
-        }
-        SoundEngine.playAlertBeep();
-      } finally {
-        btnVerifyOtpSubmit.disabled = false;
-        btnVerifyOtpSubmit.innerHTML = originalVerifyBtnText;
-      }
-    };
-
-    if (btnVerifyOtpSubmit) {
-      btnVerifyOtpSubmit.addEventListener('click', handleOtpSubmit);
-    }
-
-    if (inputOtp) {
-      inputOtp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleOtpSubmit();
-        }
-      });
-      // Hanya izinkan angka
-      inputOtp.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/[^0-9]/g, '');
-      });
-    }
-
-    // Tombol Gunakan Kode OTP Cepat (Kemudahan Pengujian & Demo Evaluasi)
-    if (btnCopyOtp && inputOtp && authOtpHintCode) {
-      btnCopyOtp.addEventListener('click', () => {
-        const code = authOtpHintCode.textContent.trim();
-        if (code && code !== '------') {
-          inputOtp.value = code;
-          SoundEngine.playTick();
-          handleOtpSubmit();
+        try {
+          const isVerified = await FirebaseSync.checkEmailVerificationStatus();
+          if (isVerified) {
+            stopAutoVerifyPolling();
+            SoundEngine.playSuccessChime();
+            if (authStepForm && authStepVerify) {
+              authStepForm.style.display = 'block';
+              authStepVerify.style.display = 'none';
+            }
+            if (inputPassword) inputPassword.value = '';
+            this.closeCloudSyncModal();
+          } else {
+            if (authVerifyStatusBox && authVerifyStatusText) {
+              authVerifyStatusBox.className = 'auth-alert-box';
+              authVerifyStatusText.textContent = 'Tautan belum diklik atau belum aktif. Silakan buka inbox/spam email Anda dan klik tautan verifikasi.';
+            }
+            SoundEngine.playAlertBeep();
+            this.showToast('Belum terverifikasi. Silakan klik tautan di email Anda terlebih dahulu.', 'warning');
+          }
+        } catch (err) {
+          console.error('Check verify link error:', err);
+          if (authVerifyStatusBox && authVerifyStatusText) {
+            authVerifyStatusBox.className = 'auth-alert-box';
+            authVerifyStatusText.textContent = `Pemeriksaan gagal: ${err.message}`;
+          }
+          SoundEngine.playAlertBeep();
+        } finally {
+          btnCheckVerifyLink.disabled = false;
+          if (btnCheckVerifyText) btnCheckVerifyText.textContent = originalText;
         }
       });
     }
 
-    // Kirim Ulang Kode OTP
+    // Kirim Ulang Tautan Verifikasi Email
     if (btnResendOtp) {
       btnResendOtp.addEventListener('click', async () => {
-        if (otpResendTimer) return;
+        if (emailResendTimer) return;
         if (!window.FirebaseSync) return;
         try {
-          const res = await FirebaseSync.resendEmailOtp();
-          if (authOtpHintCode) authOtpHintCode.textContent = res.code;
-          if (inputOtp) inputOtp.value = '';
-          if (authOtpErrorAlert) authOtpErrorAlert.style.display = 'none';
-          startOtpResendTimer();
-          this.showToast('✉️ Kode verifikasi baru telah dikirim!', 'info');
+          await FirebaseSync.resendEmailVerification();
+          startEmailResendTimer();
+          if (authVerifyStatusBox && authVerifyStatusText) {
+            authVerifyStatusBox.className = 'auth-alert-box state-info';
+            authVerifyStatusText.textContent = 'Tautan verifikasi baru telah dikirim ke email Anda.';
+          }
+          this.showToast('✉️ Tautan verifikasi baru telah dikirim!', 'info');
           SoundEngine.playTick();
         } catch (err) {
           this.showToast(`Gagal kirim ulang: ${err.message}`, 'error');
@@ -993,6 +1012,7 @@ const App = {
     // Batal Verifikasi / Ganti Email
     if (btnCancelVerify) {
       btnCancelVerify.addEventListener('click', async () => {
+        stopAutoVerifyPolling();
         if (window.FirebaseSync) {
           await FirebaseSync.cancelEmailVerification();
         }
@@ -1000,9 +1020,7 @@ const App = {
           authStepForm.style.display = 'block';
           authStepVerify.style.display = 'none';
         }
-        if (inputOtp) inputOtp.value = '';
         if (authErrorAlert) authErrorAlert.style.display = 'none';
-        if (authOtpErrorAlert) authOtpErrorAlert.style.display = 'none';
         SoundEngine.playTick();
       });
     }

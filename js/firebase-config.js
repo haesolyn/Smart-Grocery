@@ -85,6 +85,24 @@ const FirebaseSync = {
         console.warn('[FirebaseSync] Redirect result error:', err);
       });
 
+      // Cek apakah halaman dibuka langsung dari tautan verifikasi email di inbox (action oobCode)
+      const urlParams = new URLSearchParams(window.location.search);
+      const authMode = urlParams.get('mode');
+      const actionCode = urlParams.get('oobCode');
+
+      if (authMode === 'verifyEmail' && actionCode) {
+        console.log('[FirebaseSync] 🔗 Menerapkan kode verifikasi dari tautan email URL...');
+        this.auth.applyActionCode(actionCode).then(async () => {
+          console.log('[FirebaseSync] ✅ ActionCode verifikasi email berhasil diterapkan!');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          if (this.auth.currentUser) {
+            await this.completeEmailVerification(this.auth.currentUser);
+          }
+        }).catch(err => {
+          console.warn('[FirebaseSync] Notice applyActionCode:', err.message);
+        });
+      }
+
       // Pasang Auth State Listener
       this.auth.onAuthStateChanged((user) => {
         this.handleAuthStateChange(user);
@@ -108,17 +126,36 @@ const FirebaseSync = {
     }
   },
 
+  // Handler isolasi akun Email vs akun Google (Genshin-style separation)
+  toAuthEmail(email) {
+    const clean = (email || '').trim().toLowerCase();
+    if (!clean || !clean.includes('@')) return clean;
+    // Beri namespace +email agar akun Email & Password terpisah murni dari akun Google
+    return clean.replace('@', '+email@');
+  },
+
+  fromAuthEmail(authEmail) {
+    const clean = (authEmail || '').trim().toLowerCase();
+    return clean.replace('+email@', '@');
+  },
+
   // Handler saat status login user berubah
   async handleAuthStateChange(user) {
     if (user) {
       // Periksa apakah login via Google atau Email
       const isGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+
+      // Jika user sudah mengklik link verifikasi di email (user.emailVerified === true)
+      if (user.emailVerified) {
+        localStorage.setItem('sg_email_verified_' + user.uid, 'true');
+      }
+
       const isEmailVerifiedSession = localStorage.getItem('sg_email_verified_' + user.uid) === 'true';
 
-      // Jika user login via email & password, tetapi belum memverifikasi kode OTP pada sesi ini:
+      // Jika user login via email & password, tetapi belum verifikasi email:
       // TAHAN akses akun! ("walau udh bnr, pastiin kirim kode verifikasi ke email tsb")
-      if (!isGoogle && !isEmailVerifiedSession) {
-        console.log(`[FirebaseSync] ⏳ Kredensial email benar untuk ${user.email}, menahan akses menunggu kode verifikasi.`);
+      if (!isGoogle && !isEmailVerifiedSession && !user.emailVerified) {
+        console.log(`[FirebaseSync] ⏳ Kredensial email benar untuk ${user.email}, menahan akses menunggu verifikasi tautan email.`);
         this.currentUser = null;
         this.pendingEmailUser = user;
         this.updateAuthUI(null);
@@ -129,14 +166,15 @@ const FirebaseSync = {
       this.pendingEmailUser = null;
       this.updateAuthUI(user);
 
-      console.log(`[FirebaseSync] 👤 Login sebagai User: ${user.displayName || user.email} (UID: ${user.uid})`);
-      this.updateStatusBadge('online', `Akun: ${user.displayName || user.email}`);
+      const displayEmail = this.fromAuthEmail(user.email);
+      console.log(`[FirebaseSync] 👤 Login sebagai User: ${user.displayName || displayEmail} (UID: ${user.uid})`);
+      this.updateStatusBadge('online', `Akun: ${user.displayName || displayEmail}`);
 
       // Mulai realtime sync HANYA untuk user yang sudah login & terverifikasi
       this.startRealtimeListener();
 
       if (window.App && typeof App.showToast === 'function') {
-        App.showToast(`👋 Masuk sebagai <strong>${user.displayName || user.email}</strong>`, 'success');
+        App.showToast(`👋 Masuk sebagai <strong>${user.displayName || displayEmail}</strong>`, 'success');
       }
     } else {
       this.currentUser = null;
@@ -175,6 +213,7 @@ const FirebaseSync = {
 
   // 2. Request Login / Daftar dengan Email & Kata Sandi
   // "walau udh bnr, pastiin kirim kode verifikasi ke email tsb"
+  // Genshin-style: Akun Email & Akun Google berdiri sendiri-sendiri tanpa bentrok
   async requestEmailLogin(email, password, isRegister = false) {
     if (!this.auth) {
       throw new Error('Firebase Auth belum siap.');
@@ -189,95 +228,99 @@ const FirebaseSync = {
       throw new Error('Kata sandi minimal 6 karakter.');
     }
 
-    this.updateStatusBadge('syncing', isRegister ? 'Mendaftarkan akun...' : 'Memverifikasi kata sandi...');
+    // Genshin-style: Email akun terisolasi dari Google akun dengan alias +email
+    const authEmail = this.toAuthEmail(cleanEmail);
+
+    this.updateStatusBadge('syncing', isRegister ? 'Mendaftarkan akun email...' : 'Memverifikasi kata sandi...');
 
     let userCredential;
     if (isRegister) {
-      // Registrasi Akun Baru
-      userCredential = await this.auth.createUserWithEmailAndPassword(cleanEmail, password);
+      // Registrasi Akun Baru (Genshin-style: terpisah murni dari Google)
+      try {
+        userCredential = await this.auth.createUserWithEmailAndPassword(authEmail, password);
+      } catch (err) {
+        // Fallback jika alias ditolak oleh provider domain tertentu
+        if (err.code === 'auth/invalid-email') {
+          userCredential = await this.auth.createUserWithEmailAndPassword(cleanEmail, password);
+        } else {
+          throw err;
+        }
+      }
+
       const namePart = cleanEmail.split('@')[0];
       const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
       try {
         await userCredential.user.updateProfile({ displayName: capitalized });
       } catch (e) {
-        console.warn('Update displayName warning:', e);
+        console.warn('Update displayName notice:', e);
       }
     } else {
-      // Masuk Akun yang Ada (Verifikasi email + kata sandi)
-      userCredential = await this.auth.signInWithEmailAndPassword(cleanEmail, password);
+      // Masuk Akun Email yang Ada
+      try {
+        userCredential = await this.auth.signInWithEmailAndPassword(authEmail, password);
+      } catch (err) {
+        // Fallback: Jika pengguna mendaftar dengan cleanEmail sebelum pemisahan alias
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          try {
+            userCredential = await this.auth.signInWithEmailAndPassword(cleanEmail, password);
+          } catch (fallbackErr) {
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
     }
 
     const user = userCredential.user;
 
-    // KATA SANDI VALID! ("walau udh bnr")
-    // Pastikan session belum ditandai terverifikasi sampai kode dimasukkan
+    // Kata sandi benar! Tahan akses sampai email diverifikasi
     localStorage.removeItem('sg_email_verified_' + user.uid);
     this.currentUser = null;
     this.pendingEmailUser = user;
 
-    // Generate 6 digit kode OTP verifikasi
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 menit
-
     this.pendingEmailVerification = {
       user: user,
       email: cleanEmail,
-      code: otpCode,
-      expiresAt: expiresAt
+      authEmail: user.email,
+      startedAt: Date.now()
     };
 
-    // Kirim email verifikasi resmi Firebase ke alamat email user
+    // Kirim email verifikasi resmi Firebase ke alamat email pengguna
     try {
       await user.sendEmailVerification();
-      console.log('[FirebaseSync] ✉️ Email verifikasi resmi terkirim ke:', cleanEmail);
+      console.log('[FirebaseSync] ✉️ Tautan verifikasi resmi Firebase terkirim ke:', cleanEmail);
     } catch (e) {
-      console.warn('[FirebaseSync] Notice pengiriman email verifikasi Firebase:', e.message);
-    }
-
-    // Catat kode verifikasi di Firestore (untuk backup & log audit)
-    try {
-      if (this.db) {
-        await this.db.collection('email_verifications').doc(user.uid).set({
-          email: cleanEmail,
-          code: otpCode,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          expiresAt: new Date(expiresAt)
-        });
-      }
-    } catch (e) {
-      console.warn('[FirebaseSync] Firestore verification log notice:', e);
+      console.warn('[FirebaseSync] sendEmailVerification notice:', e.message);
     }
 
     return {
-      status: 'pending_otp',
-      email: cleanEmail,
-      code: otpCode
+      status: 'pending_verification',
+      email: cleanEmail
     };
   },
 
-  // 3. Verifikasi Kode OTP Email (Penyelesaian Langkah 2)
-  async verifyEmailOtp(enteredOtp) {
-    if (!this.pendingEmailVerification || !this.pendingEmailVerification.user) {
-      throw new Error('Sesi verifikasi tidak ditemukan atau telah kedaluwarsa. Silakan masukkan kata sandi kembali.');
+  // 3. Cek Status Verifikasi Email (Auto-detect saat link di email diklik)
+  async checkEmailVerificationStatus() {
+    const targetUser = (this.pendingEmailVerification && this.pendingEmailVerification.user) || this.pendingEmailUser || this.auth.currentUser;
+    if (!targetUser) return false;
+
+    try {
+      await targetUser.reload();
+      if (targetUser.emailVerified) {
+        console.log('[FirebaseSync] 🎉 Tautan email resmi terverifikasi!');
+        await this.completeEmailVerification(targetUser);
+        return true;
+      }
+    } catch (err) {
+      console.warn('[FirebaseSync] checkEmailVerificationStatus notice:', err.message);
     }
+    return false;
+  },
 
-    const { user, email, code, expiresAt } = this.pendingEmailVerification;
-
-    if (Date.now() > expiresAt) {
-      throw new Error('Kode verifikasi telah kedaluwarsa. Silakan klik "Kirim Ulang Kode".');
-    }
-
-    const cleanInput = (enteredOtp || '').toString().trim();
-    if (!cleanInput) {
-      throw new Error('Silakan masukkan 6 digit kode verifikasi.');
-    }
-
-    if (cleanInput !== code) {
-      throw new Error('Kode verifikasi salah! Periksa kembali email Anda.');
-    }
-
-    // VERIFIKASI BERHASIL! Akses diberikan ke akun pengguna
-    console.log('[FirebaseSync] ✅ 6-digit OTP berhasil diverifikasi untuk:', email);
+  // Finalisasi login setelah email terverifikasi
+  async completeEmailVerification(user) {
+    if (!user) return null;
     localStorage.setItem('sg_email_verified_' + user.uid, 'true');
 
     this.pendingEmailVerification = null;
@@ -285,57 +328,28 @@ const FirebaseSync = {
     this.currentUser = user;
 
     this.updateAuthUI(user);
-    this.updateStatusBadge('online', `Akun: ${user.displayName || user.email}`);
+    const cleanDisplayEmail = this.fromAuthEmail(user.email);
+    this.updateStatusBadge('online', `Akun: ${user.displayName || cleanDisplayEmail}`);
     this.startRealtimeListener();
 
     if (window.App && typeof App.showToast === 'function') {
-      App.showToast(`✅ Verifikasi berhasil! Selamat datang, <strong>${user.displayName || user.email}</strong>`, 'success');
+      const display = user.displayName || cleanDisplayEmail;
+      App.showToast(`✅ Email berhasil diverifikasi! Selamat datang, <strong>${display}</strong>`, 'success');
     }
 
     return user;
   },
 
-  // 4. Kirim Ulang Kode Verifikasi Email
-  async resendEmailOtp() {
-    if (!this.pendingEmailVerification || !this.pendingEmailVerification.user) {
+  // 4. Kirim Ulang Tautan Verifikasi Email
+  async resendEmailVerification() {
+    const targetUser = (this.pendingEmailVerification && this.pendingEmailVerification.user) || this.pendingEmailUser || this.auth.currentUser;
+    if (!targetUser) {
       throw new Error('Tidak ada sesi verifikasi yang aktif.');
     }
 
-    const user = this.pendingEmailVerification.user;
-    const cleanEmail = this.pendingEmailVerification.email;
-
-    // Kirim ulang email verifikasi
-    try {
-      await user.sendEmailVerification();
-    } catch (e) {
-      console.warn('Resend sendEmailVerification notice:', e);
-    }
-
-    // Generate kode baru
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-
-    this.pendingEmailVerification.code = newCode;
-    this.pendingEmailVerification.expiresAt = expiresAt;
-
-    try {
-      if (this.db) {
-        await this.db.collection('email_verifications').doc(user.uid).set({
-          email: cleanEmail,
-          code: newCode,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          expiresAt: new Date(expiresAt)
-        });
-      }
-    } catch (e) {
-      console.warn('Firestore resend notice:', e);
-    }
-
-    return {
-      status: 'resent',
-      email: cleanEmail,
-      code: newCode
-    };
+    await targetUser.sendEmailVerification();
+    console.log('[FirebaseSync] ✉️ Email verifikasi berhasil dikirim ulang ke:', targetUser.email);
+    return this.fromAuthEmail(targetUser.email);
   },
 
   // 5. Batalkan Verifikasi Email (Kembali ke Step 1 atau ganti email)
@@ -363,8 +377,18 @@ const FirebaseSync = {
       throw new Error('Silakan masukkan alamat email yang valid.');
     }
 
-    await this.auth.sendPasswordResetEmail(cleanEmail);
-    console.log('[FirebaseSync] ✉️ Tautan reset kata sandi terkirim ke:', cleanEmail);
+    const authEmail = this.toAuthEmail(cleanEmail);
+    try {
+      await this.auth.sendPasswordResetEmail(authEmail);
+      console.log('[FirebaseSync] ✉️ Tautan reset sandi terkirim ke:', authEmail);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
+        await this.auth.sendPasswordResetEmail(cleanEmail);
+        console.log('[FirebaseSync] ✉️ Tautan reset sandi terkirim ke fallback:', cleanEmail);
+      } else {
+        throw err;
+      }
+    }
     return cleanEmail;
   },
 
@@ -392,7 +416,7 @@ const FirebaseSync = {
     }
   },
 
-  // 7. Update Tampilan UI Akun (Header, Modal Sync, dan Tab Anggaran)
+  // 8. Update Tampilan UI Akun (Header, Modal Sync, dan Tab Anggaran)
   updateAuthUI(user) {
     const loggedOutCards = document.querySelectorAll('.auth-logged-out');
     const loggedInCards = document.querySelectorAll('.auth-logged-in');
@@ -415,21 +439,22 @@ const FirebaseSync = {
       if (authBadge && authMethodText) {
         if (isGoogle) {
           authBadge.className = 'user-tag-verified badge-google-tag';
-          authMethodText.textContent = 'Akun Google Terverifikasi';
+          authMethodText.textContent = 'Akun Google';
         } else {
           authBadge.className = 'user-tag-verified badge-email-tag';
-          authMethodText.textContent = 'Email Terverifikasi (Kode OTP)';
+          authMethodText.textContent = 'Akun Email (Terverifikasi)';
         }
       }
 
       // Update data profil di UI
-      const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Pengguna');
+      const cleanDisplayEmail = this.fromAuthEmail(user.email);
+      const displayName = user.displayName || (cleanDisplayEmail ? cleanDisplayEmail.split('@')[0] : 'Pengguna');
       document.querySelectorAll('.user-display-name').forEach(el => {
         el.textContent = displayName;
       });
 
       document.querySelectorAll('.user-display-email').forEach(el => {
-        el.textContent = user.email || '';
+        el.textContent = cleanDisplayEmail;
       });
 
       document.querySelectorAll('.user-uid-short').forEach(el => {
