@@ -3,7 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#10b981">
+  <meta name="theme-color" id="theme-color-meta" content="#090d16">
+  <script>
+    (function() {
+      try {
+        var THEMES = {
+          'emerald': '#10b981',
+          'pastel-mint': '#34d399',
+          'pastel-lilac': '#c084fc',
+          'pastel-peach': '#fb923c',
+          'pastel-sky': '#38bdf8',
+          'pastel-sakura': '#f472b6',
+          'pastel-matcha': '#a3e635',
+          'pastel-butter': '#facc15',
+          'cyan': '#06b6d4',
+          'violet': '#8b5cf6',
+          'amber': '#f59e0b',
+          'rose': '#f43f5e'
+        };
+        var savedColor = localStorage.getItem('sg_theme_color') || 'emerald';
+        var savedMode = localStorage.getItem('sg_theme_mode') || 'dark';
+        document.documentElement.setAttribute('data-theme-color', savedColor);
+        document.documentElement.setAttribute('data-theme-mode', savedMode);
+        var meta = document.getElementById('theme-color-meta');
+        if (meta && THEMES[savedColor]) {
+          meta.content = THEMES[savedColor];
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Smart Grocery">
@@ -151,6 +179,38 @@
           </div>
         </div>
 
+        <!-- CALL-TO-ACTION: AJAKAN MASUK / DAFTAR AKUN SAAT BELUM LOGIN -->
+        <div class="home-auth-banner" id="home-auth-guest">
+          <div class="home-auth-icon-wrap">
+            <i data-lucide="user-plus"></i>
+          </div>
+          <div class="home-auth-body">
+            <div class="home-auth-title">Masuk atau Buat Akun Dulu</div>
+            <div class="home-auth-desc">Yuk masuk atau buat akun dulu agar troli & anggaran belanjamu tersimpan aman di Cloud dan sinkron otomatis antar HP!</div>
+          </div>
+          <button type="button" class="home-auth-btn" id="btn-home-guest-auth" onclick="App.openCloudSyncModal()" aria-label="Masuk atau Buat Akun">
+            <span>Masuk / Bikin Akun</span>
+            <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+          </button>
+        </div>
+
+        <!-- STATUS AKUN AKTIF SAAT SUDAH LOGIN -->
+        <div class="home-auth-banner logged-in" id="home-auth-user" style="display: none;">
+          <div class="home-auth-icon-wrap user-online">
+            <i data-lucide="cloud"></i>
+          </div>
+          <div class="home-auth-body">
+            <div class="home-auth-title">
+              <span class="user-display-name">Akun Terhubung</span>
+              <span class="home-auth-badge-online">Cloud Aktif</span>
+            </div>
+            <div class="home-auth-desc">Troli belanja Anda tersinkron aman di Cloud Firestore</div>
+          </div>
+          <button type="button" class="home-auth-btn secondary" id="btn-home-open-account" onclick="App.openCloudSyncModal()" aria-label="Kelola Akun">
+            <span>Kelola Akun</span>
+          </button>
+        </div>
+
         <!-- Sesi Belanja: Lokasi Toko & Selector Tanggal (SRS F-01 & F-06A) -->
         <div class="session-bar-card" id="session-bar-card">
           <div class="session-field">
@@ -215,7 +275,7 @@
       <section class="tab-view" id="view-riwayat">
         <div class="view-header-row">
           <div class="view-title">
-            <i data-lucide="receipt" style="width: 20px; height: 20px; color: var(--accent-secondary);"></i>
+            <i data-lucide="receipt" style="width: 20px; height: 20px; color: var(--color-safe-light);"></i>
             <span>Riwayat Belanja Bulanan</span>
           </div>
           <span class="view-badge-pill" id="history-count-badge">0 Transaksi</span>
@@ -497,7 +557,7 @@
           </button>
         </div>
 
-        <div style="margin-bottom: 16px; text-align: center; padding: 14px; background: rgba(16, 185, 129, 0.08); border-radius: var(--radius-md); border: 1px solid var(--color-safe-border);">
+        <div style="margin-bottom: 16px; text-align: center; padding: 14px; background: var(--color-safe-bg); border-radius: var(--radius-md); border: 1px solid var(--color-safe-border);">
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Total Belanja Akhir:</div>
           <div id="checkout-total-display" style="font-size: 26px; font-weight: 800; color: var(--color-safe-light);">Rp 0</div>
           <div id="checkout-savings-display" style="font-size: 12px; color: var(--color-warn-light); font-weight: 600; margin-top: 4px;"></div>
@@ -537,7 +597,7 @@
         <div class="sheet-handle"></div>
         <div class="sheet-header">
           <div class="sheet-title">
-            <i data-lucide="trending-up" style="color: var(--accent-secondary);"></i>
+            <i data-lucide="trending-up" style="color: var(--accent-primary);"></i>
             <span>Detail Komparasi Harga</span>
           </div>
           <button type="button" class="sheet-close-btn" id="btn-close-price-detail">

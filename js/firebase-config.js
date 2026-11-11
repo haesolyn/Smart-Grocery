@@ -264,7 +264,9 @@ const FirebaseSync = {
           try {
             userCredential = await this.auth.signInWithEmailAndPassword(cleanEmail, password);
           } catch (fallbackErr) {
-            throw err;
+            // Diagnosis akurat: bedakan akun belum terdaftar vs akun Google vs salah sandi
+            const diagnosedErr = await this.diagnoseLoginFailure(cleanEmail, authEmail, fallbackErr);
+            throw diagnosedErr;
           }
         } else {
           throw err;
@@ -298,6 +300,64 @@ const FirebaseSync = {
       status: 'pending_verification',
       email: cleanEmail
     };
+  },
+
+  // Mendiagnosis penyebab kegagalan login secara presisi (membedakan akun belum terdaftar vs salah sandi)
+  async diagnoseLoginFailure(cleanEmail, authEmail, originalErr) {
+    const apiKey = this.config && this.config.apiKey;
+    if (!apiKey || typeof fetch === 'undefined') return originalErr;
+
+    try {
+      const probeEmail = async (email) => {
+        const tempPass = 'Probe_' + Math.random().toString(36) + 'Aa9!#$';
+        const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: tempPass, returnSecureToken: true })
+        });
+        const data = await res.json();
+        if (data.error && data.error.message === 'EMAIL_EXISTS') {
+          return true; // Email memang terdaftar di sistem!
+        }
+        if (res.ok && data.idToken) {
+          // Email belum terdaftar; segera hapus akun probe secara instan
+          await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: data.idToken })
+          }).catch(() => { });
+          return false;
+        }
+        return false;
+      };
+
+      // 1. Cek apakah akun authEmail (+email) sudah pernah terdaftar
+      const authEmailExists = await probeEmail(authEmail);
+      if (authEmailExists) {
+        const err = new Error('Kata sandi salah. Silakan periksa kembali atau gunakan opsi Lupa Sandi.');
+        err.code = 'auth/wrong-password';
+        return err;
+      }
+
+      // 2. Cek apakah cleanEmail (misal akun Google) pernah terdaftar
+      if (cleanEmail !== authEmail) {
+        const cleanEmailExists = await probeEmail(cleanEmail);
+        if (cleanEmailExists) {
+          const err = new Error('Akun email belum dibuat untuk alamat ini (email ini sebelumnya digunakan via akun Google). Silakan gunakan tombol Google di atas, atau klik "Daftar Akun Baru" untuk membuat akun email terpisah.');
+          err.code = 'auth/google-account-exists';
+          return err;
+        }
+      }
+
+      // 3. Jika kedua-duanya tidak ada di sistem:
+      // Pengguna sama sekali belum pernah mendaftar!
+      const err = new Error('Akun dengan email ini belum terdaftar. Silakan pilih "Daftar Akun Baru".');
+      err.code = 'auth/user-not-found';
+      return err;
+    } catch (diagErr) {
+      console.warn('[FirebaseSync] Diagnosis login notice:', diagErr);
+      return originalErr;
+    }
   },
 
   // 3. Cek Status Verifikasi Email (Auto-detect saat link di email diklik)

@@ -111,6 +111,11 @@ const SoundEngine = {
     } catch (e) {}
   },
 
+  // Alias untuk kompatibilitas notifikasi alert/error
+  playAlertBeep() {
+    this.playWarningBuzz();
+  },
+
   // Success / Checkout Chime
   playSuccessChime() {
     if (this.isMuted) return;

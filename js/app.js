@@ -241,12 +241,22 @@ const App = {
   applyTheme(showToast = true) {
     document.documentElement.setAttribute('data-theme-color', this.currentThemeColor);
     document.documentElement.setAttribute('data-theme-mode', this.currentThemeMode);
+    if (document.body) {
+      document.body.setAttribute('data-theme-color', this.currentThemeColor);
+      document.body.setAttribute('data-theme-mode', this.currentThemeMode);
+    }
 
-    // Update meta theme-color di header
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-      const themeColor = this.THEME_CONFIG[this.currentThemeColor] ? this.THEME_CONFIG[this.currentThemeColor].color : '#10b981';
-      metaTheme.setAttribute('content', themeColor);
+    // Update meta theme-color di header secara reaktif (hapus dan buat node baru agar Android Chrome memicu repaint pada navigation bar OS)
+    const themeColor = this.THEME_CONFIG[this.currentThemeColor] ? this.THEME_CONFIG[this.currentThemeColor].color : '#10b981';
+    try {
+      document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.remove());
+      const newMeta = document.createElement('meta');
+      newMeta.name = 'theme-color';
+      newMeta.id = 'theme-color-meta';
+      newMeta.content = themeColor;
+      document.head.appendChild(newMeta);
+    } catch (e) {
+      console.warn('Failed to update meta theme-color:', e);
     }
 
     // Update label tema di card pengaturan
@@ -292,6 +302,8 @@ const App = {
       localStorage.setItem('sg_theme_color', this.currentThemeColor);
       localStorage.setItem('sg_theme_mode', this.currentThemeMode);
     } catch (e) {}
+
+    this.initLucideIcons();
 
     if (showToast) {
       const cfg = this.THEME_CONFIG[this.currentThemeColor];
@@ -890,17 +902,23 @@ const App = {
 
         if (err.code === 'auth/email-already-in-use') {
           // Terjadi saat mendaftar akun baru, tetapi email sudah terdaftar
-          errorMsg = 'Email ini sudah terdaftar sebelumnya. Silakan beralih ke menu Masuk atau gunakan tombol Masuk dengan Google.';
+          errorMsg = 'Email ini sudah terdaftar. Silakan beralih ke menu Masuk di bawah atau klik Reset Sandi jika lupa kata sandi.';
           showActions = true;
           actionSwitchMode = true;
           actionResetPwd = true;
-        } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-          // Terjadi saat masuk: email & kata sandi tidak cocok
-          errorMsg = 'Kata sandi salah atau email ini sebelumnya dibuat via akun Google.';
+        } else if (err.code === 'auth/wrong-password') {
+          // Terjadi saat akun email memang sudah ada, tetapi kata sandinya salah
+          errorMsg = 'Kata sandi salah. Silakan periksa kembali atau gunakan opsi Reset Sandi.';
           showActions = true;
           actionResetPwd = true;
-        } else if (err.code === 'auth/user-not-found') {
-          errorMsg = 'Akun dengan email ini belum terdaftar. Silakan pilih "Daftar Akun Baru".';
+        } else if (err.code === 'auth/google-account-exists') {
+          // Akun email belum dibuat, namun email ini terdaftar via Google
+          errorMsg = 'Akun email belum dibuat untuk alamat ini (email ini sebelumnya digunakan via akun Google). Silakan gunakan tombol Google di atas, atau klik "Daftar Akun Baru" untuk membuat akun email terpisah.';
+          showActions = true;
+          actionSwitchMode = true;
+        } else if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          // Belum punya akun sama sekali! ("klo blm pny akun samsek walau blm prnh login di google maupun email")
+          errorMsg = 'Akun dengan email ini belum terdaftar. Silakan pilih "Daftar Akun Baru" di bawah.';
           showActions = true;
           actionSwitchMode = true;
         } else if (err.code === 'auth/weak-password') {
@@ -969,18 +987,22 @@ const App = {
           } else {
             if (authVerifyStatusBox && authVerifyStatusText) {
               authVerifyStatusBox.className = 'auth-alert-box';
-              authVerifyStatusText.textContent = 'Tautan belum diklik atau belum aktif. Silakan buka inbox/spam email Anda dan klik tautan verifikasi.';
+              authVerifyStatusText.textContent = 'Tautan belum diklik atau belum terdeteksi. Silakan buka email Anda, klik tautan verifikasi, lalu tekan tombol ini lagi.';
             }
-            SoundEngine.playAlertBeep();
-            this.showToast('Belum terverifikasi. Silakan klik tautan di email Anda terlebih dahulu.', 'warning');
+            if (typeof SoundEngine.playWarningBuzz === 'function') {
+              SoundEngine.playWarningBuzz();
+            }
+            this.showToast('Belum terdeteksi. Silakan klik tautan verifikasi di email Anda terlebih dahulu.', 'warning');
           }
         } catch (err) {
           console.error('Check verify link error:', err);
           if (authVerifyStatusBox && authVerifyStatusText) {
             authVerifyStatusBox.className = 'auth-alert-box';
-            authVerifyStatusText.textContent = `Pemeriksaan gagal: ${err.message}`;
+            authVerifyStatusText.textContent = 'Belum terdeteksi mengklik tautan. Pastikan Anda sudah membuka email dan mengklik tautan verifikasi.';
           }
-          SoundEngine.playAlertBeep();
+          if (typeof SoundEngine.playWarningBuzz === 'function') {
+            SoundEngine.playWarningBuzz();
+          }
         } finally {
           btnCheckVerifyLink.disabled = false;
           if (btnCheckVerifyText) btnCheckVerifyText.textContent = originalText;
@@ -1045,6 +1067,13 @@ const App = {
           btnHomeGoogleLogin.disabled = false;
           btnHomeGoogleLogin.innerHTML = origText;
         }
+      });
+    }
+
+    const btnHomeGuestAuth = document.getElementById('btn-home-guest-auth');
+    if (btnHomeGuestAuth) {
+      btnHomeGuestAuth.addEventListener('click', () => {
+        this.openCloudSyncModal();
       });
     }
 
