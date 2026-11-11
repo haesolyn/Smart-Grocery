@@ -97,6 +97,10 @@
             <i data-lucide="user" style="width: 18px; height: 18px;"></i>
           </div>
         </button>
+        <!-- Panduan Aplikasi Button -->
+        <button type="button" class="icon-btn" id="btn-open-guide-modal" title="Panduan Aplikasi" aria-label="Panduan Aplikasi" onclick="App.openGuideModal()">
+          <i data-lucide="help-circle" style="width: 18px; height: 18px;"></i>
+        </button>
         <!-- Theme Palette Switcher Button -->
         <button type="button" class="icon-btn" id="btn-open-theme-modal" title="Pilihan Tema Warna" aria-label="Theme Color">
           <i data-lucide="palette" style="width: 18px; height: 18px;"></i>
@@ -165,106 +169,159 @@
            TAB 1: BELANJA (CART / CURRENT TROLLEY)
            =================================================================== -->
       <section class="tab-view active" id="view-belanja">
-        <div class="view-header-row">
-          <div class="view-title">
-            <i data-lucide="shopping-cart" style="width: 18px; height: 18px; color: var(--color-safe-light);"></i>
-            <span>Isi Troli Belanja</span>
+        <!-- F-00: HERO LANDING GATE (Wajib Ajakan Masuk / Buat Akun Terlebih Dahulu) -->
+        <div class="landing-login-gate" id="landing-login-gate">
+          <div class="gate-hero-glow"></div>
+          <div class="gate-icon-badge">
+            <i data-lucide="shield-check" class="gate-shield-icon"></i>
+            <div class="gate-cart-mini">
+              <i data-lucide="shopping-cart"></i>
+            </div>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <button type="button" class="btn-clear-cart" id="btn-clear-all-cart" title="Kosongkan Seluruh Troli" onclick="App.openConfirmClearModal()" style="display: none;">
-              <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
-              <span>Kosongkan</span>
+          <h2 class="gate-title">Yuk Masuk / Buat Akun Dulu! ✨</h2>
+          <p class="gate-subtitle">Agar troli belanja supermarket dan saldo batas anggaranmu otomatis tersimpan aman di Cloud Firestore & tersinkronisasi realtime antar perangkat.</p>
+
+          <div class="gate-benefits-grid">
+            <div class="gate-benefit-item">
+              <div class="gate-benefit-icon"><i data-lucide="cloud"></i></div>
+              <div class="gate-benefit-text">
+                <strong>Anti Data Hilang</strong>
+                <span>Data belanjaan tetap aman tersimpan walau HP mati, reload browser, atau ganti HP.</span>
+              </div>
+            </div>
+            <div class="gate-benefit-item">
+              <div class="gate-benefit-icon"><i data-lucide="smartphone"></i></div>
+              <div class="gate-benefit-text">
+                <strong>Sinkron Antar Perangkat</strong>
+                <span>Cukup masuk dengan akun yang sama untuk memantau troli bersama secara realtime.</span>
+              </div>
+            </div>
+            <div class="gate-benefit-item">
+              <div class="gate-benefit-icon"><i data-lucide="trending-up"></i></div>
+              <div class="gate-benefit-text">
+                <strong>Pantau Kenaikan Harga</strong>
+                <span>Sistem otomatis membandingkan harga barang vs belanjaanmu bulan lalu.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="gate-actions-wrap">
+            <button type="button" class="btn-gate-primary" id="btn-gate-auth" onclick="App.openCloudSyncModal()">
+              <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+              <span>Masuk / Buat Akun Sekarang</span>
             </button>
-            <span class="view-badge-pill" id="cart-count-badge">0 Barang</span>
-          </div>
-        </div>
-
-        <!-- CALL-TO-ACTION: AJAKAN MASUK / DAFTAR AKUN SAAT BELUM LOGIN -->
-        <div class="home-auth-banner" id="home-auth-guest">
-          <div class="home-auth-icon-wrap">
-            <i data-lucide="user-plus"></i>
-          </div>
-          <div class="home-auth-body">
-            <div class="home-auth-title">Masuk atau Buat Akun Dulu</div>
-            <div class="home-auth-desc">Yuk masuk atau buat akun dulu agar troli & anggaran belanjamu tersimpan aman di Cloud dan sinkron otomatis antar HP!</div>
-          </div>
-          <button type="button" class="home-auth-btn" id="btn-home-guest-auth" onclick="App.openCloudSyncModal()" aria-label="Masuk atau Buat Akun">
-            <span>Masuk / Bikin Akun</span>
-            <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
-          </button>
-        </div>
-
-        <!-- STATUS AKUN AKTIF SAAT SUDAH LOGIN -->
-        <div class="home-auth-banner logged-in" id="home-auth-user" style="display: none;">
-          <div class="home-auth-icon-wrap user-online">
-            <i data-lucide="cloud"></i>
-          </div>
-          <div class="home-auth-body">
-            <div class="home-auth-title">
-              <span class="user-display-name">Akun Terhubung</span>
-              <span class="home-auth-badge-online">Cloud Aktif</span>
-            </div>
-            <div class="home-auth-desc">Troli belanja Anda tersinkron aman di Cloud Firestore</div>
-          </div>
-          <button type="button" class="home-auth-btn secondary" id="btn-home-open-account" onclick="App.openCloudSyncModal()" aria-label="Kelola Akun">
-            <span>Kelola Akun</span>
-          </button>
-        </div>
-
-        <!-- Sesi Belanja: Lokasi Toko & Selector Tanggal (SRS F-01 & F-06A) -->
-        <div class="session-bar-card" id="session-bar-card">
-          <div class="session-field">
-            <label for="select-store-location">
-              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
-              <span>Lokasi Toko</span>
-            </label>
-            <div class="session-input-wrap">
-              <select id="select-store-location" class="session-select">
-                <option value="Lotte Mart Grocery - Puri Indah" selected>Lotte Mart Grocery - Puri Indah</option>
-                <option value="Superindo Kaliurang">Superindo Kaliurang</option>
-                <option value="Hypermart Puri Indah">Hypermart Puri Indah</option>
-                <option value="Indomaret Point">Indomaret Point</option>
-                <option value="Alfamidi Super">Alfamidi Super</option>
-              </select>
-            </div>
-          </div>
-          <div class="session-field">
-            <label for="input-session-date">
-              <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
-              <span>Tanggal Belanja</span>
-            </label>
-            <div class="session-input-wrap">
-              <input type="date" id="input-session-date" class="session-date-input">
-            </div>
-          </div>
-        </div>
-
-
-
-        <div class="belanja-layout-wrapper">
-          <!-- Cart Items List (F-01, F-02, F-03, F-04) -->
-          <div class="cart-items-list" id="cart-items-list">
-            <!-- Dynamically populated by JS -->
-          </div>
-
-          <!-- Trolley Summary Box & Checkout Action -->
-          <div class="trolley-summary-box" id="trolley-summary-box">
-            <div class="summary-line">
-              <span>Subtotal Barang:</span>
-              <span id="summary-subtotal">Rp 0</span>
-            </div>
-            <div class="summary-line savings">
-              <span>Hemat Diskon:</span>
-              <span id="summary-savings">-Rp 0</span>
-            </div>
-            <div class="summary-line highlight">
-              <span>Total Bayar di Kasir:</span>
-              <span id="summary-final-total" style="color: var(--color-safe-light);">Rp 0</span>
-            </div>
-            <button type="button" class="checkout-btn" id="btn-finish-shopping">
-              <i data-lucide="check-check" style="width: 20px; height: 20px;"></i>
-              <span>Selesai Belanja & Simpan Riwayat</span>
+            <button type="button" class="btn-gate-secondary" id="btn-gate-guest" onclick="App.continueAsGuest()">
+              <i data-lucide="shopping-bag" style="width: 16px; height: 16px;"></i>
+              <span>Coba Dulu sebagai Tamu (Troli Offline)</span>
             </button>
+            <button type="button" class="btn-gate-guide" id="btn-gate-guide" onclick="App.openGuideModal()">
+              <i data-lucide="book-open" style="width: 15px; height: 15px;"></i>
+              <span>Pelajari Fitur Aplikasi (Buka Panduan)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AREA AKTIF BELANJA (Terbuka saat sudah login ATAU tamu memilih coba dulu) -->
+        <div id="active-shopping-area" style="display: none;">
+          <div class="view-header-row">
+            <div class="view-title">
+              <i data-lucide="shopping-cart" style="width: 18px; height: 18px; color: var(--color-safe-light);"></i>
+              <span>Isi Troli Belanja</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" class="btn-clear-cart" id="btn-clear-all-cart" title="Kosongkan Seluruh Troli" onclick="App.openConfirmClearModal()" style="display: none;">
+                <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+                <span>Kosongkan</span>
+              </button>
+              <span class="view-badge-pill" id="cart-count-badge">0 Barang</span>
+            </div>
+          </div>
+
+          <!-- CALL-TO-ACTION: AJAKAN MASUK / DAFTAR AKUN SAAT BELUM LOGIN (MODE TAMU) -->
+          <div class="home-auth-banner" id="home-auth-guest">
+            <div class="home-auth-icon-wrap">
+              <i data-lucide="user-plus"></i>
+            </div>
+            <div class="home-auth-body">
+              <div class="home-auth-title">Mode Tamu (Offline)</div>
+              <div class="home-auth-desc">Troli saat ini hanya tersimpan di browser ini. Yuk masuk akun agar tersimpan permanen di Cloud!</div>
+            </div>
+            <button type="button" class="home-auth-btn" id="btn-home-guest-auth" onclick="App.openCloudSyncModal()" aria-label="Masuk atau Buat Akun">
+              <span>Masuk / Simpan</span>
+              <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+            </button>
+          </div>
+
+          <!-- STATUS AKUN AKTIF SAAT SUDAH LOGIN -->
+          <div class="home-auth-banner logged-in" id="home-auth-user" style="display: none;">
+            <div class="home-auth-icon-wrap user-online">
+              <i data-lucide="cloud"></i>
+            </div>
+            <div class="home-auth-body">
+              <div class="home-auth-title">
+                <span class="user-display-name">Akun Terhubung</span>
+                <span class="home-auth-badge-online">Cloud Aktif</span>
+              </div>
+              <div class="home-auth-desc">Troli belanja Anda tersinkron aman di Cloud Firestore</div>
+            </div>
+            <button type="button" class="home-auth-btn secondary" id="btn-home-open-account" onclick="App.openCloudSyncModal()" aria-label="Kelola Akun">
+              <span>Kelola Akun</span>
+            </button>
+          </div>
+
+          <!-- Sesi Belanja: Lokasi Toko & Selector Tanggal (SRS F-01 & F-06A) -->
+          <div class="session-bar-card" id="session-bar-card">
+            <div class="session-field">
+              <label for="select-store-location">
+                <i data-lucide="store" style="width: 12px; height: 12px;"></i>
+                <span>Lokasi Toko</span>
+              </label>
+              <div class="session-input-wrap">
+                <select id="select-store-location" class="session-select">
+                  <option value="Lotte Mart Grocery - Puri Indah" selected>Lotte Mart Grocery - Puri Indah</option>
+                  <option value="Superindo Kaliurang">Superindo Kaliurang</option>
+                  <option value="Hypermart Puri Indah">Hypermart Puri Indah</option>
+                  <option value="Indomaret Point">Indomaret Point</option>
+                  <option value="Alfamidi Super">Alfamidi Super</option>
+                </select>
+              </div>
+            </div>
+            <div class="session-field">
+              <label for="input-session-date">
+                <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
+                <span>Tanggal Belanja</span>
+              </label>
+              <div class="session-input-wrap">
+                <input type="date" id="input-session-date" class="session-date-input">
+              </div>
+            </div>
+          </div>
+
+          <div class="belanja-layout-wrapper">
+            <!-- Cart Items List (F-01, F-02, F-03, F-04) -->
+            <div class="cart-items-list" id="cart-items-list">
+              <!-- Dynamically populated by JS -->
+            </div>
+
+            <!-- Trolley Summary Box & Checkout Action -->
+            <div class="trolley-summary-box" id="trolley-summary-box">
+              <div class="summary-line">
+                <span>Subtotal Barang:</span>
+                <span id="summary-subtotal">Rp 0</span>
+              </div>
+              <div class="summary-line savings">
+                <span>Hemat Diskon:</span>
+                <span id="summary-savings">-Rp 0</span>
+              </div>
+              <div class="summary-line highlight">
+                <span>Total Bayar di Kasir:</span>
+                <span id="summary-final-total" style="color: var(--color-safe-light);">Rp 0</span>
+              </div>
+              <button type="button" class="checkout-btn" id="btn-finish-shopping">
+                <i data-lucide="check-check" style="width: 20px; height: 20px;"></i>
+                <span>Selesai Belanja & Simpan Riwayat</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -365,9 +422,13 @@
               <img src="icons/app-logo.png?v=10.0" alt="Smart Grocery App Logo" style="width: 76px; height: 76px; border-radius: 20px; box-shadow: 0 10px 28px rgba(0,0,0,0.35), 0 0 25px var(--color-safe-bg); border: 2px solid rgba(255,255,255,0.25); margin: 0 auto 12px; display: block; object-fit: cover;">
               <div style="font-size: 17px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Smart Grocery PWA</div>
               <div style="font-size: 12px; color: var(--accent-primary); font-weight: 700; margin-bottom: 10px;">Budget Safety Tracker v2.5</div>
-              <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; max-width: 310px; margin: 0 auto;">
+              <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; max-width: 310px; margin: 0 auto 14px;">
                 Pelacak belanja supermarket cerdas dengan kalkulator diskon bertingkat compound, komparasi harga acuan, dan proteksi batas anggaran anak rantau.
               </p>
+              <button type="button" class="btn-small-outline" id="btn-anggaran-guide" onclick="App.openGuideModal()" style="width: 100%; justify-content: center; padding: 11px; border-color: var(--color-safe-border); color: var(--accent-primary); font-weight: 700; background: var(--color-safe-bg); border-radius: var(--radius-md);">
+                <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
+                <span>Buka Panduan Fitur Aplikasi</span>
+              </button>
             </div>
           </div>
         </div>
@@ -942,6 +1003,243 @@
         <button type="button" class="btn-primary" id="btn-save-theme-modal" style="width: 100%; margin-top: 14px;">
           <span>Selesai</span>
         </button>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         MODAL BOTTOM SHEET: PANDUAN PENGGUNAAN APLIKASI
+         (Tutorial Fitur SRS F-01 s/d F-06 & Tips Supermarket)
+         =================================================================== -->
+    <div class="modal-overlay" id="modal-guide">
+      <div class="bottom-sheet guide-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div class="sheet-title">
+            <i data-lucide="book-open" style="color: var(--accent-primary);"></i>
+            <span>Panduan Penggunaan Aplikasi</span>
+          </div>
+          <button type="button" class="sheet-close-btn" id="btn-close-guide" onclick="App.closeGuideModal()" aria-label="Tutup Panduan">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="guide-sheet-body">
+          <!-- Step Navigator Pills -->
+          <div class="guide-nav-pills" id="guide-nav-pills">
+            <button type="button" class="guide-pill-btn active" data-guide-tab="guide-troli">
+              <i data-lucide="shopping-cart"></i>
+              <span>1. Troli & Item</span>
+            </button>
+            <button type="button" class="guide-pill-btn" data-guide-tab="guide-diskon">
+              <i data-lucide="percent"></i>
+              <span>2. Diskon</span>
+            </button>
+            <button type="button" class="guide-pill-btn" data-guide-tab="guide-komparasi">
+              <i data-lucide="trending-up"></i>
+              <span>3. Komparasi</span>
+            </button>
+            <button type="button" class="guide-pill-btn" data-guide-tab="guide-anggaran">
+              <i data-lucide="shield-check"></i>
+              <span>4. Safety Cap</span>
+            </button>
+            <button type="button" class="guide-pill-btn" data-guide-tab="guide-cloud">
+              <i data-lucide="cloud"></i>
+              <span>5. Cloud & Akun</span>
+            </button>
+          </div>
+
+          <!-- Content Panels -->
+          <div class="guide-content-wrapper">
+            <!-- PANEL 1: Pencatatan Item & Kuantitas Otomatis (F-01 & F-02) -->
+            <div class="guide-tab-panel active" id="guide-troli">
+              <div class="guide-section-header">
+                <div class="guide-step-number">01</div>
+                <div>
+                  <h3 class="guide-panel-title">Pencatatan Item & Troli Ergonomis</h3>
+                  <div class="guide-panel-subtitle">Standar Checklist SRS F-01 & F-02</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🛒</div>
+                  <div>
+                    <strong>Tombol Cepat (+) Ergonomis Jempol</strong>
+                    <p>Tekan tombol bulat melayang (+) di pojok kanan bawah saat sedang mendorong troli dengan satu tangan untuk membuka formulir input barang.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🌾</div>
+                  <div>
+                    <strong>8 Kategori & Satuan Fleksibel</strong>
+                    <p>Tersedia 8 kategori barang lengkap (Bahan Pokok, Sayur & Buah, Daging & Seafood, Bumbu & Dapur, Susu & Telur, Makanan Ringan, Minuman, Kebersihan) dengan satuan kg, liter, pcs, dan pack.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">⚡</div>
+                  <div>
+                    <strong>Kalkulasi Subtotal Realtime Otomatis</strong>
+                    <p>Cukup masukkan kuantitas dan harga satuan, total harga item langsung dihitung otomatis seketika tanpa perlu menekan tombol hitung.</p>
+                  </div>
+                </div>
+                <div class="guide-pro-tip">
+                  <i data-lucide="lightbulb" style="color: var(--accent-primary); width: 18px; height: 18px; flex-shrink: 0;"></i>
+                  <span><strong>Tips Praktis:</strong> Gunakan tombol stepper (+/-) langsung di daftar troli untuk mengubah kuantitas barang belanjaan tanpa perlu membuka modal lagi!</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL 2: Kalkulator Diskon Bertingkat (F-03) -->
+            <div class="guide-tab-panel" id="guide-diskon">
+              <div class="guide-section-header">
+                <div class="guide-step-number">02</div>
+                <div>
+                  <h3 class="guide-panel-title">Kalkulator Diskon Bertingkat</h3>
+                  <div class="guide-panel-subtitle">Standar Checklist SRS F-03 (Compound Discount)</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🏷️</div>
+                  <div>
+                    <strong>Dukungan Promo Diskon Supermarket</strong>
+                    <p>Dukung diskon tunggal (misal 20%), diskon bertingkat (misal promo 50% + 20%), atau diskon nominal rupiah langsung.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🧮</div>
+                  <div>
+                    <strong>Perhitungan Compound yang Akurat</strong>
+                    <p>Diskon bertingkat dihitung berurutan, bukan dijumlahkan! Contoh harga Rp 100.000 diskon 50%+20%: pertama dipotong 50% (jadi Rp 50.000), lalu sisa dipotong 20% (hemat Rp 10.000), sehingga harga akhir tepat <strong>Rp 40.000</strong> (bukan Rp 30.000).</p>
+                  </div>
+                </div>
+                <div class="guide-pro-tip">
+                  <i data-lucide="sparkles" style="color: var(--accent-primary); width: 18px; height: 18px; flex-shrink: 0;"></i>
+                  <span><strong>Chips Cepat:</strong> Tersedia tombol instan diskon 10%, 20%, 25%, 30%, 50%, dan 50%+20% agar Anda tidak perlu mengetik manual.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL 3: Komparator Harga Realtime vs Bulan Lalu (F-04) -->
+            <div class="guide-tab-panel" id="guide-komparasi">
+              <div class="guide-section-header">
+                <div class="guide-step-number">03</div>
+                <div>
+                  <h3 class="guide-panel-title">Komparator Harga Realtime</h3>
+                  <div class="guide-panel-subtitle">Standar Checklist SRS F-04 (Bulan Ini vs Bulan Lalu)</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🔺</div>
+                  <div>
+                    <strong style="color: var(--color-danger-light);">Indikator Merah (↑ Naik)</strong>
+                    <p>Menandakan harga produk saat ini lebih mahal dibanding harga acuan belanja bulan lalu. Periksa kembali apakah perlu mencari alternatif merk lain.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🟢</div>
+                  <div>
+                    <strong style="color: var(--color-safe-light);">Indikator Hijau (↓ Turun)</strong>
+                    <p>Menandakan harga sedang turun atau terdapat promo khusus yang lebih hemat dari belanjaan sebelumnya.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">➖</div>
+                  <div>
+                    <strong style="color: var(--text-muted);">Indikator Stabil (=)</strong>
+                    <p>Harga barang sama persis dengan transaksi bulan sebelumnya.</p>
+                  </div>
+                </div>
+                <div class="guide-pro-tip">
+                  <i data-lucide="info" style="color: var(--accent-primary); width: 18px; height: 18px; flex-shrink: 0;"></i>
+                  <span><strong>Detail Komparasi:</strong> Ketuk pill perbandingan harga pada kartu barang untuk melihat persentase selisih harga dan nominal hemat/ruginya.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL 4: Pengendali Anggaran / Safety Cap (F-05) -->
+            <div class="guide-tab-panel" id="guide-anggaran">
+              <div class="guide-section-header">
+                <div class="guide-step-number">04</div>
+                <div>
+                  <h3 class="guide-panel-title">Pengendali Batas Anggaran (Safety Cap)</h3>
+                  <div class="guide-panel-subtitle">Standar Checklist SRS F-05 (Proteksi Saldo Dompet)</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🛡️</div>
+                  <div>
+                    <strong style="color: var(--color-safe-light);">Kartu Hijau: Status Aman (&lt; 80%)</strong>
+                    <p>Total belanjaan Anda masih di bawah 80% dari batas maksimal dompet. Silakan belanja dengan nyaman.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">⚠️</div>
+                  <div>
+                    <strong style="color: var(--color-warn-light);">Kartu Kuning: Status Waspada (80% - 100%)</strong>
+                    <p>Belanjaan mendekati batas kritis dompet. Saatnya mengecek kembali barang-barang sekunder di troli.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🚨</div>
+                  <div>
+                    <strong style="color: var(--color-danger-light);">Kartu Merah Berdenyut: Bahaya Overbudget (&gt; 100%)</strong>
+                    <p>Belanja melebihi saldo dompet! Kartu berdenyut merah tegas, banner peringatan muncul, dan ponsel memicu getaran haptik audio peringatan.</p>
+                  </div>
+                </div>
+                <div class="guide-pro-tip">
+                  <i data-lucide="sliders" style="color: var(--accent-primary); width: 18px; height: 18px; flex-shrink: 0;"></i>
+                  <span><strong>Atur Limit:</strong> Ketuk tombol limit di kartu atas untuk mengubah nominal batas dompet (misal Rp 350.000 atau Rp 500.000) kapan saja.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL 5: Cloud Sync, Riwayat & Export (F-06) -->
+            <div class="guide-tab-panel" id="guide-cloud">
+              <div class="guide-section-header">
+                <div class="guide-step-number">05</div>
+                <div>
+                  <h3 class="guide-panel-title">Cloud Firestore & Riwayat Belanja</h3>
+                  <div class="guide-panel-subtitle">Standar Checklist SRS F-06 & Multi-Device Sync</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">☁️</div>
+                  <div>
+                    <strong>Sinkronisasi Realtime Google & Email</strong>
+                    <p>Masuk dengan Google Sign-In atau Email untuk mengamankan data troli Anda ke Cloud Firestore secara instan.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">🧾</div>
+                  <div>
+                    <strong>Selesai Belanja (Checkout Transaksi)</strong>
+                    <p>Tekan tombol "Selesai Belanja & Simpan Riwayat" di kasir. Riwayat belanja akan tercatat dan harga barang otomatis memperbarui database acuan belanja bulan depan.</p>
+                  </div>
+                </div>
+                <div class="guide-point-item">
+                  <div class="guide-point-bullet">📁</div>
+                  <div>
+                    <strong>Cadangan Data Export & Import JSON</strong>
+                    <p>Anda dapat mengunduh salinan berkas JSON atau memulihkannya sewaktu-waktu di tab Anggaran.</p>
+                  </div>
+                </div>
+                <div class="guide-pro-tip">
+                  <i data-lucide="check-circle-2" style="color: var(--accent-primary); width: 18px; height: 18px; flex-shrink: 0;"></i>
+                  <span><strong>Salin Troli:</strong> Pada riwayat bulan lalu, terdapat tombol "Salin Troli" untuk menduplikasi daftar belanjaan rutin tanpa mengetik ulang!</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom CTA Action -->
+          <button type="button" class="btn-primary" id="btn-guide-start" onclick="App.closeGuideModal()" style="width: 100%; margin-top: 16px; padding: 14px; font-weight: 800;">
+            <i data-lucide="shopping-bag" style="width: 18px; height: 18px;"></i>
+            <span>Siap, Mulai Belanja Sekarang!</span>
+          </button>
+        </div>
       </div>
     </div>
 

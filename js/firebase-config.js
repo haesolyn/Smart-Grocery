@@ -579,6 +579,11 @@ const FirebaseSync = {
     if (window.App && typeof App.initLucideIcons === 'function') {
       App.initLucideIcons();
     }
+
+    // Pastikan Landing Gate sinkron dengan status auth terbaru
+    if (window.App && typeof App.checkLandingGate === 'function') {
+      App.checkLandingGate();
+    }
   },
 
   // Realtime Snapshot Listener: Aktif untuk Akun Google maupun Sesi Bersama Multi-Device (SRS F-06B)

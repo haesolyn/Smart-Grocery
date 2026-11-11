@@ -1778,12 +1778,14 @@ body {
   background: var(--bg-surface-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--color-safe-border);
   display: flex;
   align-items: center;
   justify-content: space-around;
   padding: 0 12px calc(6px + env(safe-area-inset-bottom, 0px));
   z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.28);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 @media (min-width: 768px) {
@@ -1819,15 +1821,30 @@ body {
 .nav-tab-label {
   font-size: 11px;
   font-weight: 600;
+  transition: color 0.2s ease;
 }
 
 .nav-tab-btn.active {
-  color: var(--color-safe-light);
+  color: var(--accent-primary);
+  background: var(--color-safe-bg);
+}
+
+.nav-tab-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-primary);
 }
 
 .nav-tab-btn.active svg {
   transform: translateY(-2px);
-  stroke: var(--color-safe-light);
+  stroke: var(--accent-primary);
 }
 
 .nav-tab-btn .badge-count {
@@ -1837,7 +1854,7 @@ body {
   min-width: 18px;
   height: 18px;
   border-radius: 9px;
-  background: var(--color-safe);
+  background: var(--accent-primary);
   color: #ffffff;
   font-size: 10px;
   font-weight: 800;
@@ -3835,4 +3852,430 @@ body {
 
 .btn-home-account:active {
   transform: scale(0.96);
+}
+
+/* ==========================================================================
+   F-00: HERO LANDING GATE (AJAKAN LOGIN / DAFTAR AKUN SEBELUM BELANJA)
+   ========================================================================== */
+.landing-login-gate {
+  position: relative;
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-surface-elevated) 100%);
+  border: 1.5px solid var(--color-safe-border);
+  border-radius: var(--radius-lg);
+  padding: 26px 20px 22px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 25px var(--shadow-glow-safe);
+  margin-bottom: 20px;
+  overflow: hidden;
+  animation: gateFadeIn 0.35s ease-out;
+}
+
+@keyframes gateFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gate-hero-glow {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 140px;
+  background: radial-gradient(ellipse at center, var(--color-safe-bg) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gate-icon-badge {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+  background: var(--color-safe-bg);
+  border: 2px solid var(--color-safe-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--accent-primary);
+  box-shadow: 0 8px 24px var(--shadow-glow-safe);
+  animation: gatePulse 2.5s infinite ease-in-out;
+  z-index: 1;
+}
+
+@keyframes gatePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.gate-shield-icon {
+  width: 34px;
+  height: 34px;
+  stroke: var(--accent-primary);
+}
+
+.gate-cart-mini {
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gate-cart-mini svg {
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
+}
+
+.gate-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.015em;
+}
+
+.gate-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gate-benefits-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+}
+
+.gate-benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.gate-benefit-item:hover {
+  background: var(--color-safe-bg);
+  border-color: var(--color-safe-border);
+}
+
+.gate-benefit-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-safe-bg);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gate-benefit-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke: var(--accent-primary);
+}
+
+.gate-benefit-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gate-benefit-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.gate-benefit-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.gate-actions-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-gate-primary {
+  width: 100%;
+  height: 50px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--shadow-glow-safe);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-gate-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.btn-gate-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-gate-secondary {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--border-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-gate-secondary:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--color-safe-border);
+}
+
+.btn-gate-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-gate-guide {
+  background: transparent;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-gate-guide:hover {
+  text-decoration: underline;
+  filter: brightness(1.15);
+}
+
+/* ==========================================================================
+   MODAL PANDUAN PENGGUNAAN APLIKASI (GUIDE SHEET)
+   ========================================================================== */
+.guide-sheet {
+  max-height: 86vh;
+  max-height: 86dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-sheet-body {
+  overflow-y: auto;
+  padding: 0 20px 24px;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.guide-nav-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.guide-nav-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.guide-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.guide-pill-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+}
+
+.guide-pill-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 10px var(--shadow-glow-safe);
+}
+
+.guide-pill-btn.active svg {
+  stroke: #ffffff;
+}
+
+.guide-tab-panel {
+  display: none;
+  animation: guideFade 0.25s ease-out;
+}
+
+.guide-tab-panel.active {
+  display: block;
+}
+
+@keyframes guideFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.guide-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.guide-step-number {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--accent-primary);
+  line-height: 1;
+  background: var(--color-safe-bg);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-safe-border);
+}
+
+.guide-panel-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.guide-panel-subtitle {
+  font-size: 11px;
+  color: var(--accent-primary);
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.guide-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guide-point-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.guide-point-bullet {
+  font-size: 20px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.guide-point-item strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.guide-point-item p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.guide-pro-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--color-safe-bg);
+  border: 1px solid var(--color-safe-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text-main);
+  line-height: 1.45;
 }

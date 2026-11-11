@@ -53,6 +53,9 @@ const App = {
     this.setupInputCalculators();
     this.initSessionStoreAndDate();
 
+    // Pastikan Landing Gate diperiksa saat inisialisasi awal
+    this.checkLandingGate();
+
     // Render initial views
     this.renderCart();
     this.renderSafetyCap();
@@ -246,15 +249,21 @@ const App = {
       document.body.setAttribute('data-theme-mode', this.currentThemeMode);
     }
 
-    // Update meta theme-color di header secara reaktif (hapus dan buat node baru agar Android Chrome memicu repaint pada navigation bar OS)
+    // Update meta theme-color di header secara presisi & reaktif
     const themeColor = this.THEME_CONFIG[this.currentThemeColor] ? this.THEME_CONFIG[this.currentThemeColor].color : '#10b981';
     try {
-      document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.remove());
-      const newMeta = document.createElement('meta');
-      newMeta.name = 'theme-color';
-      newMeta.id = 'theme-color-meta';
-      newMeta.content = themeColor;
-      document.head.appendChild(newMeta);
+      let metaTheme = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]');
+      if (!metaTheme) {
+        metaTheme = document.createElement('meta');
+        metaTheme.name = 'theme-color';
+        metaTheme.id = 'theme-color-meta';
+        document.head.appendChild(metaTheme);
+      }
+      metaTheme.setAttribute('content', themeColor);
+      metaTheme.content = themeColor;
+
+      // Update styling CSS variable root langsung agar sinkron seketika
+      document.documentElement.style.setProperty('--accent-primary', themeColor);
     } catch (e) {
       console.warn('Failed to update meta theme-color:', e);
     }
@@ -355,6 +364,81 @@ const App = {
     if (modal) {
       modal.classList.remove('active');
     }
+  },
+
+  // Modal Panduan Aplikasi (SRS F-01 s/d F-06)
+  openGuideModal() {
+    const modal = document.getElementById('modal-guide');
+    if (modal) {
+      modal.classList.add('active');
+      if (window.SoundEngine) SoundEngine.playTick();
+      this.initLucideIcons();
+    }
+  },
+
+  closeGuideModal() {
+    const modal = document.getElementById('modal-guide');
+    if (modal) {
+      modal.classList.remove('active');
+      if (window.SoundEngine) SoundEngine.playTick();
+    }
+  },
+
+  switchGuideTab(tabId) {
+    if (!tabId) return;
+    document.querySelectorAll('.guide-pill-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.guideTab === tabId);
+    });
+    document.querySelectorAll('.guide-tab-panel').forEach(panel => {
+      panel.classList.toggle('active', panel.id === tabId);
+    });
+    if (window.SoundEngine) SoundEngine.playTick();
+    this.initLucideIcons();
+  },
+
+  // Periksa Status Tampilan Landing Gate (Wajib Ajakan Masuk / Buat Akun Terlebih Dahulu)
+  checkLandingGate() {
+    const gate = document.getElementById('landing-login-gate');
+    const activeShoppingArea = document.getElementById('active-shopping-area');
+    const fabBtn = document.getElementById('fab-add-grocery');
+    const homeGuest = document.getElementById('home-auth-guest');
+    const homeUser = document.getElementById('home-auth-user');
+
+    const currentUser = window.FirebaseSync && window.FirebaseSync.auth && window.FirebaseSync.auth.currentUser;
+    const isGuestUnlocked = sessionStorage.getItem('sg_guest_unlocked') === 'true';
+
+    if (currentUser) {
+      // 1. Sudah login resmi: Langsung buka area belanja penuh dan tampilkan status akun
+      if (gate) gate.style.display = 'none';
+      if (activeShoppingArea) activeShoppingArea.style.display = 'block';
+      if (fabBtn) fabBtn.style.display = 'flex';
+      if (homeGuest) homeGuest.style.display = 'none';
+      if (homeUser) homeUser.style.display = 'flex';
+    } else if (isGuestUnlocked) {
+      // 2. Tamu telah memilih coba dulu (mode offline): Buka troli dengan banner peringatan tamu
+      if (gate) gate.style.display = 'none';
+      if (activeShoppingArea) activeShoppingArea.style.display = 'block';
+      if (fabBtn) fabBtn.style.display = 'flex';
+      if (homeGuest) homeGuest.style.display = 'flex';
+      if (homeUser) homeUser.style.display = 'none';
+    } else {
+      // 3. Tampilan Awal: Kunci troli dan tampilkan hero landing gate ajakan masuk / buat akun dulu!
+      if (gate) gate.style.display = 'block';
+      if (activeShoppingArea) activeShoppingArea.style.display = 'none';
+      if (fabBtn) fabBtn.style.display = 'none';
+      if (homeGuest) homeGuest.style.display = 'none';
+      if (homeUser) homeUser.style.display = 'none';
+    }
+
+    this.initLucideIcons();
+  },
+
+  // Tamu memilih mencoba belanja dulu tanpa login
+  continueAsGuest() {
+    sessionStorage.setItem('sg_guest_unlocked', 'true');
+    this.checkLandingGate();
+    if (window.SoundEngine) SoundEngine.playTick();
+    this.showToast('Mode Tamu Aktif: Data belanja tersimpan lokal di perangkat ini');
   },
 
   // Event Listeners Utama
@@ -1088,9 +1172,72 @@ const App = {
       btnLogout.addEventListener('click', async () => {
         if (!window.FirebaseSync) return;
         if (confirm('Keluar dari akun? Data troli belanja Anda akan tetap aman tersimpan di cloud.')) {
+          sessionStorage.removeItem('sg_guest_unlocked');
           await FirebaseSync.logout();
+          this.checkLandingGate();
           SoundEngine.playTick();
         }
+      });
+    }
+
+    // 16. Panduan Penggunaan Aplikasi & Landing Gate Listeners
+    const btnOpenGuideModal = document.getElementById('btn-open-guide-modal');
+    if (btnOpenGuideModal) {
+      btnOpenGuideModal.addEventListener('click', () => {
+        this.openGuideModal();
+      });
+    }
+
+    const btnCloseGuide = document.getElementById('btn-close-guide');
+    if (btnCloseGuide) {
+      btnCloseGuide.addEventListener('click', () => {
+        this.closeGuideModal();
+      });
+    }
+
+    const btnGuideStart = document.getElementById('btn-guide-start');
+    if (btnGuideStart) {
+      btnGuideStart.addEventListener('click', () => {
+        this.closeGuideModal();
+      });
+    }
+
+    const modalGuideOverlay = document.getElementById('modal-guide');
+    if (modalGuideOverlay) {
+      modalGuideOverlay.addEventListener('click', (e) => {
+        if (e.target === modalGuideOverlay) {
+          this.closeGuideModal();
+        }
+      });
+    }
+
+    // Guide Tab Navigation Pills
+    document.querySelectorAll('.guide-pill-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tab = e.currentTarget.dataset.guideTab;
+        if (tab) this.switchGuideTab(tab);
+      });
+    });
+
+    // Landing Gate Actions
+    const btnGateAuth = document.getElementById('btn-gate-auth');
+    if (btnGateAuth) {
+      btnGateAuth.addEventListener('click', () => {
+        this.openCloudSyncModal();
+      });
+    }
+
+    const btnGateGuest = document.getElementById('btn-gate-guest');
+    if (btnGateGuest) {
+      btnGateGuest.addEventListener('click', () => {
+        this.continueAsGuest();
+      });
+    }
+
+    const btnGateGuide = document.getElementById('btn-gate-guide');
+    if (btnGateGuide) {
+      btnGateGuide.addEventListener('click', () => {
+        this.openGuideModal();
       });
     }
   },
