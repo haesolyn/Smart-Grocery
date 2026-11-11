@@ -401,6 +401,8 @@ const App = {
     const gate = document.getElementById('landing-login-gate');
     const activeShoppingArea = document.getElementById('active-shopping-area');
     const fabBtn = document.getElementById('fab-add-grocery');
+    const safetyCapWidget = document.getElementById('safety-cap-widget');
+    const overbudgetBanner = document.getElementById('overbudget-alert-banner');
     const homeGuest = document.getElementById('home-auth-guest');
     const homeUser = document.getElementById('home-auth-user');
 
@@ -408,24 +410,30 @@ const App = {
     const isGuestUnlocked = sessionStorage.getItem('sg_guest_unlocked') === 'true';
 
     if (currentUser) {
-      // 1. Sudah login resmi: Langsung buka area belanja penuh dan tampilkan status akun
+      // 1. Sudah login resmi: Langsung buka area belanja penuh, widget total belanja, dan profil akun
       if (gate) gate.style.display = 'none';
       if (activeShoppingArea) activeShoppingArea.style.display = 'block';
       if (fabBtn) fabBtn.style.display = 'flex';
+      if (safetyCapWidget) safetyCapWidget.style.display = 'block';
       if (homeGuest) homeGuest.style.display = 'none';
       if (homeUser) homeUser.style.display = 'flex';
+      this.renderSafetyCap();
     } else if (isGuestUnlocked) {
-      // 2. Tamu telah memilih coba dulu (mode offline): Buka troli dengan banner peringatan tamu
+      // 2. Tamu telah memilih coba dulu (mode offline): Buka troli & widget total belanja dengan banner peringatan tamu
       if (gate) gate.style.display = 'none';
       if (activeShoppingArea) activeShoppingArea.style.display = 'block';
       if (fabBtn) fabBtn.style.display = 'flex';
+      if (safetyCapWidget) safetyCapWidget.style.display = 'block';
       if (homeGuest) homeGuest.style.display = 'flex';
       if (homeUser) homeUser.style.display = 'none';
+      this.renderSafetyCap();
     } else {
-      // 3. Tampilan Awal: Kunci troli dan tampilkan hero landing gate ajakan masuk / buat akun dulu!
+      // 3. Tampilan Awal: Kunci troli, sembunyikan total belanja & safety cap sampai login atau pilih coba dulu!
       if (gate) gate.style.display = 'block';
       if (activeShoppingArea) activeShoppingArea.style.display = 'none';
       if (fabBtn) fabBtn.style.display = 'none';
+      if (safetyCapWidget) safetyCapWidget.style.display = 'none';
+      if (overbudgetBanner) overbudgetBanner.style.display = 'none';
       if (homeGuest) homeGuest.style.display = 'none';
       if (homeUser) homeUser.style.display = 'none';
     }
@@ -1509,10 +1517,19 @@ const App = {
   // F-05: PENGENDALI ANGGARAN (SAFETY CAP)
   // =========================================================================
   renderSafetyCap() {
+    const widget = document.getElementById('safety-cap-widget');
+    const currentUser = window.FirebaseSync && window.FirebaseSync.auth && window.FirebaseSync.auth.currentUser;
+    const isGuestUnlocked = sessionStorage.getItem('sg_guest_unlocked') === 'true';
+
+    // Sembunyikan total belanja & safety cap saat pengguna belum login / belum memilih mode tamu
+    if (!currentUser && !isGuestUnlocked) {
+      if (widget) widget.style.display = 'none';
+      return;
+    }
+
     const totals = GroceryEngine.getCartTotals();
     const evaluation = BudgetSafetyCap.evaluateStatus(totals.totalExpenditure);
 
-    const widget = document.getElementById('safety-cap-widget');
     const badge = document.getElementById('safety-badge');
     const badgeText = document.getElementById('safety-badge-text');
     const badgeIcon = document.getElementById('safety-badge-icon');
