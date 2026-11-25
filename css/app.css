@@ -1501,10 +1501,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: clamp(10px, 2.9vw, 11.5px);
   color: var(--text-faint);
   margin-top: 18px;
   line-height: 1.4;
+  white-space: nowrap;
+}
+
+.empty-cart-hint svg {
+  flex-shrink: 0;
 }
 
 /* Product Card - Ergonomic Mobile */

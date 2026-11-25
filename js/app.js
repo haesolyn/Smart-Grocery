@@ -2037,7 +2037,7 @@ const App = {
           </button>
           <div class="empty-cart-hint">
             <i data-lucide="receipt" style="width: 13px; height: 13px;"></i>
-            <span>Riwayat tersimpan otomatis saat kamu menekan tombol "Selesai Belanja"</span>
+            <span>Tersimpan otomatis saat "Selesai Belanja"</span>
           </div>
         </div>
       `;
