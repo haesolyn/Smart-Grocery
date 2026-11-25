@@ -5,6 +5,58 @@
 
 const PWAHandler = {
   deferredPrompt: null,
+  DISMISS_KEY: 'sg_pwa_banner_dismissed',
+
+  isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  },
+
+  isIOSBrowser() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  },
+
+  hideInstallUI() {
+    const banner = document.getElementById('pwa-install-banner');
+    const cardBtn = document.getElementById('btn-anggaran-install-pwa');
+    if (banner) banner.style.display = 'none';
+    if (cardBtn) cardBtn.style.display = 'none';
+  },
+
+  showInstallUI() {
+    if (this.isStandaloneMode()) {
+      this.hideInstallUI();
+      return;
+    }
+
+    const banner = document.getElementById('pwa-install-banner');
+    const cardBtn = document.getElementById('btn-anggaran-install-pwa');
+    const isDismissed = localStorage.getItem(this.DISMISS_KEY) === '1';
+
+    if (banner && !isDismissed && this.deferredPrompt) {
+      banner.style.display = 'flex';
+    }
+    if (cardBtn && (this.deferredPrompt || this.isIOSBrowser())) {
+      cardBtn.style.display = 'inline-flex';
+    }
+    if (window.App && typeof App.initLucideIcons === 'function') {
+      App.initLucideIcons();
+    }
+  },
+
+  async triggerInstall() {
+    if (!this.deferredPrompt) {
+      if (window.App && typeof App.showToast === 'function') {
+        App.showToast('📱 Pasang di iPhone: Ketuk Bagikan lalu "Tambah ke Layar Utama"');
+      }
+      return;
+    }
+
+    this.deferredPrompt.prompt();
+    const { outcome } = await this.deferredPrompt.userChoice;
+    console.log(`[PWA] Keputusan pengguna: ${outcome}`);
+    this.deferredPrompt = null;
+    this.hideInstallUI();
+  },
 
   init() {
     // 1. Daftarkan Service Worker dengan auto-update
@@ -29,46 +81,45 @@ const PWAHandler = {
       });
     }
 
-    // 2. Tangkap event beforeinstallprompt untuk custom install banner
+    // 2. Tangkap event beforeinstallprompt untuk custom install banner & tombol di Anggaran
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferredPrompt = e;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) {
-        banner.style.display = 'flex';
-      }
+      this.showInstallUI();
     });
 
-    // 3. Tangani klik tombol install
+    // 3. Tangani klik tombol install (banner & card Anggaran)
     const installBtn = document.getElementById('btn-pwa-install');
     if (installBtn) {
-      installBtn.addEventListener('click', async () => {
-        if (!this.deferredPrompt) {
-          if (window.App && typeof App.showToast === 'function') {
-            App.showToast('📱 Pasang di iPhone: Ketuk Bagikan lalu "Tambah ke Layar Utama"');
-          }
-          return;
-        }
-        this.deferredPrompt.prompt();
-        const { outcome } = await this.deferredPrompt.userChoice;
-        console.log(`[PWA] Keputusan pengguna: ${outcome}`);
-        this.deferredPrompt = null;
+      installBtn.addEventListener('click', () => this.triggerInstall());
+    }
+
+    const cardInstallBtn = document.getElementById('btn-anggaran-install-pwa');
+    if (cardInstallBtn) {
+      cardInstallBtn.addEventListener('click', () => this.triggerInstall());
+    }
+
+    // 4. Tangani klik tombol tutup banner
+    const dismissBtn = document.getElementById('btn-pwa-dismiss');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        localStorage.setItem(this.DISMISS_KEY, '1');
         const banner = document.getElementById('pwa-install-banner');
         if (banner) banner.style.display = 'none';
       });
     }
 
-    // 4. Deteksi apakah sudah terpasang (standalone mode)
+    // 5. Deteksi apakah sudah terpasang (standalone mode) atau iOS Safari
     window.addEventListener('appinstalled', () => {
       console.log('[PWA] Aplikasi Smart Grocery berhasil dipasang ke Home Screen!');
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'none';
+      this.deferredPrompt = null;
+      this.hideInstallUI();
     });
 
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (isStandalone) {
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'none';
+    if (this.isStandaloneMode()) {
+      this.hideInstallUI();
+    } else if (this.isIOSBrowser()) {
+      this.showInstallUI();
     }
   }
 };

@@ -153,15 +153,6 @@
       </div>
     </div>
 
-    <!-- PWA INSTALL BANNER (Add to Home Screen) -->
-    <div class="pwa-banner" id="pwa-install-banner" style="display: none;">
-      <div class="pwa-banner-text">
-        <i data-lucide="download" style="width: 18px; height: 18px;"></i>
-        <span>Pasang aplikasi di layar HP kamu</span>
-      </div>
-      <button type="button" class="pwa-install-btn" id="btn-pwa-install">Pasang</button>
-    </div>
-
     <!-- MAIN SCROLLABLE VIEW CONTAINER -->
     <main class="view-container" id="main-scroll">
 
@@ -324,6 +315,25 @@
             </div>
           </div>
         </div>
+
+        <!-- PWA INSTALL BANNER (Scrollable, Dismissible, Mobile-Friendly) -->
+        <div class="pwa-banner" id="pwa-install-banner" style="display: none;">
+          <div class="pwa-banner-text">
+            <div class="pwa-banner-icon">
+              <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+            </div>
+            <div class="pwa-banner-copy">
+              <strong>Pasang Aplikasi di HP</strong>
+              <span>Akses lebih cepat dari layar utama</span>
+            </div>
+          </div>
+          <div class="pwa-banner-actions">
+            <button type="button" class="pwa-install-btn" id="btn-pwa-install">Pasang</button>
+            <button type="button" class="pwa-dismiss-btn" id="btn-pwa-dismiss" title="Tutup" aria-label="Tutup banner pasang aplikasi">
+              <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
+        </div>
       </section>
 
       <!-- ===================================================================
@@ -425,6 +435,10 @@
               <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; max-width: 310px; margin: 0 auto 14px;">
                 Pelacak belanja supermarket cerdas dengan kalkulator diskon bertingkat compound, komparasi harga acuan, dan proteksi batas anggaran anak rantau.
               </p>
+              <button type="button" class="btn-small-outline pwa-card-install-btn" id="btn-anggaran-install-pwa" style="display: none; width: 100%; justify-content: center; padding: 11px; margin-bottom: 8px; border-color: var(--accent-primary); color: #ffffff; font-weight: 700; background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%); border-radius: var(--radius-md);">
+                <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                <span>Pasang Aplikasi ke Layar HP</span>
+              </button>
               <button type="button" class="btn-small-outline" id="btn-anggaran-guide" onclick="App.openGuideModal()" style="width: 100%; justify-content: center; padding: 11px; border-color: var(--color-safe-border); color: var(--accent-primary); font-weight: 700; background: var(--color-safe-bg); border-radius: var(--radius-md);">
                 <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
                 <span>Buka Panduan Fitur Aplikasi</span>
