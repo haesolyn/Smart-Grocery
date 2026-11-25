@@ -424,7 +424,7 @@ html,
 body {
   width: 100%;
   height: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   background-color: var(--bg-desktop);
   color: var(--text-main);
   user-select: none;
@@ -434,8 +434,6 @@ body {
 body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
   display: flex;
   justify-content: center;
   background-color: var(--bg-desktop);
@@ -449,9 +447,8 @@ body {
 #mobile-frame {
   width: 100%;
   max-width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  max-height: 100dvh;
+  height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -464,9 +461,15 @@ body {
 
 /* Desktop Responsive View (Screens >= 768px) */
 @media (min-width: 768px) {
+  html,
   body {
+    height: auto;
     overflow-y: auto;
     overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
     align-items: flex-start;
   }
 
@@ -1912,10 +1915,11 @@ body {
    ========================================================================== */
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -1947,8 +1951,7 @@ body {
   border: 1px solid var(--border-subtle);
   border-bottom: none;
   padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
-  max-height: 88vh;
-  max-height: 88dvh;
+  max-height: 88%;
   overflow-y: auto;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
   transform: translateY(100%);
@@ -1962,8 +1965,7 @@ body {
     max-width: 520px;
     width: 100%;
     margin: auto;
-    max-height: 85vh;
-    max-height: 85dvh;
+    max-height: 85%;
     transform: scale(0.96);
     opacity: 0;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
@@ -4196,8 +4198,7 @@ body {
    MODAL PANDUAN PENGGUNAAN APLIKASI (GUIDE SHEET)
    ========================================================================== */
 .guide-sheet {
-  max-height: 86vh;
-  max-height: 86dvh;
+  max-height: 86%;
   display: flex;
   flex-direction: column;
 }
