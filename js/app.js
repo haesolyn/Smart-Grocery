@@ -680,10 +680,8 @@ const App = {
 
     // 14. Firebase Cloud Sync Modal
     const btnCloseCloud = document.getElementById('btn-close-cloud-sync');
-    const btnDoneCloud = document.getElementById('btn-done-cloud-sync');
 
     if (btnCloseCloud) btnCloseCloud.addEventListener('click', () => this.closeCloudSyncModal());
-    if (btnDoneCloud) btnDoneCloud.addEventListener('click', () => this.closeCloudSyncModal());
 
     // Tutup modal cloud sync saat ketuk overlay di luar
     const modalCloudOverlay = document.getElementById('modal-cloud-sync');
