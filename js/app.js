@@ -384,6 +384,28 @@ const App = {
     }
   },
 
+  async refreshApp() {
+    const btn = document.getElementById('btn-header-refresh');
+    if (btn) {
+      btn.classList.add('is-spinning');
+      btn.disabled = true;
+    }
+    if (window.SoundEngine) SoundEngine.playTick();
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) await reg.update();
+      }
+    } catch (err) {
+      console.warn('[App] Service worker update check skipped:', err);
+    }
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 180);
+  },
+
   switchGuideTab(tabId) {
     if (!tabId) return;
     document.querySelectorAll('.guide-pill-btn').forEach(btn => {

@@ -658,6 +658,50 @@ body {
   background: var(--color-safe-bg);
 }
 
+.icon-btn.is-spinning svg {
+  animation: iconSpin 0.6s linear infinite;
+}
+
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 400px) {
+  .app-header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .header-brand {
+    gap: 8px;
+  }
+
+  .header-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .header-title-wrap h1 {
+    font-size: 14.5px;
+  }
+
+  .header-actions {
+    gap: 5px;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
 /* ==========================================================================
    SAFETY CAP WIDGET (F-05) - STICKY TOP CONTROLLER
    ========================================================================== */
