@@ -17,9 +17,7 @@ const PWAHandler = {
 
   hideInstallUI() {
     const banner = document.getElementById('pwa-install-banner');
-    const cardBtn = document.getElementById('btn-anggaran-install-pwa');
     if (banner) banner.style.display = 'none';
-    if (cardBtn) cardBtn.style.display = 'none';
   },
 
   showInstallUI() {
@@ -29,14 +27,10 @@ const PWAHandler = {
     }
 
     const banner = document.getElementById('pwa-install-banner');
-    const cardBtn = document.getElementById('btn-anggaran-install-pwa');
     const isDismissed = localStorage.getItem(this.DISMISS_KEY) === '1';
 
     if (banner && !isDismissed && this.deferredPrompt) {
       banner.style.display = 'flex';
-    }
-    if (cardBtn && (this.deferredPrompt || this.isIOSBrowser())) {
-      cardBtn.style.display = 'inline-flex';
     }
     if (window.App && typeof App.initLucideIcons === 'function') {
       App.initLucideIcons();
@@ -88,15 +82,10 @@ const PWAHandler = {
       this.showInstallUI();
     });
 
-    // 3. Tangani klik tombol install (banner & card Anggaran)
+    // 3. Tangani klik tombol install
     const installBtn = document.getElementById('btn-pwa-install');
     if (installBtn) {
       installBtn.addEventListener('click', () => this.triggerInstall());
-    }
-
-    const cardInstallBtn = document.getElementById('btn-anggaran-install-pwa');
-    if (cardInstallBtn) {
-      cardInstallBtn.addEventListener('click', () => this.triggerInstall());
     }
 
     // 4. Tangani klik tombol tutup banner
