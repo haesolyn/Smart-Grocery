@@ -425,6 +425,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
   background-color: var(--bg-desktop);
   color: var(--text-main);
   user-select: none;
@@ -454,6 +456,7 @@ body {
   position: relative;
   background-color: var(--bg-app);
   overflow: hidden;
+  overscroll-behavior: none;
   box-shadow: none;
   border: none;
   transition: background-color 0.3s ease;
@@ -1264,6 +1267,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
   padding: 0 14px calc(var(--nav-height) + 24px + env(safe-area-inset-bottom, 0px));
   position: relative;
   -webkit-overflow-scrolling: touch;
@@ -1997,6 +2001,7 @@ body {
   padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   max-height: 88%;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -4249,6 +4254,7 @@ body {
 
 .guide-sheet-body {
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 0 20px 24px;
   flex: 1;
   -webkit-overflow-scrolling: touch;
