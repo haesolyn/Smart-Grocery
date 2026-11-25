@@ -2240,9 +2240,36 @@ const App = {
     }, 2500);
   },
 
+  // Pastikan opsi lokasi toko ada di <select> sebelum item "+ Tambah Lokasi Baru..."
+  ensureStoreOption(storeSelect, storeName) {
+    if (!storeSelect || !storeName) return null;
+    const trimmed = storeName.trim();
+    if (!trimmed || trimmed === '__ADD_NEW__') return null;
+
+    const existing = Array.from(storeSelect.options).find(
+      opt => opt.value !== '__ADD_NEW__' && opt.value.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (existing) return existing.value;
+
+    const option = document.createElement('option');
+    option.value = trimmed;
+    option.textContent = trimmed;
+    const addNewOpt = storeSelect.querySelector('option[value="__ADD_NEW__"]');
+    if (addNewOpt) {
+      storeSelect.insertBefore(option, addNewOpt);
+    } else {
+      storeSelect.appendChild(option);
+    }
+    return trimmed;
+  },
+
   // Sesi Toko & Tanggal Aktif (SRS F-01 & F-06A)
   initSessionStoreAndDate() {
     const storeSelect = document.getElementById('select-store-location');
+    const customWrap = document.getElementById('session-custom-store');
+    const customInput = document.getElementById('input-custom-store');
+    const btnSaveCustom = document.getElementById('btn-save-custom-store');
+    const btnCancelCustom = document.getElementById('btn-cancel-custom-store');
     const dateInput = document.getElementById('input-session-date');
 
     const defaultStore = 'Lotte Mart Grocery - Puri Indah';
@@ -2253,15 +2280,92 @@ const App = {
     const savedDate = localStorage.getItem('sg_active_date') || todayStr;
 
     if (storeSelect) {
-      storeSelect.value = savedStore;
+      let customStores = [];
+      try {
+        customStores = JSON.parse(localStorage.getItem('sg_custom_stores') || '[]');
+      } catch (e) {
+        customStores = [];
+      }
+      if (Array.isArray(customStores)) {
+        customStores.forEach(s => this.ensureStoreOption(storeSelect, s));
+      }
+      const activeVal = this.ensureStoreOption(storeSelect, savedStore) || defaultStore;
+      storeSelect.value = activeVal;
+
+      const showSelectMode = () => {
+        if (customWrap) customWrap.style.display = 'none';
+        storeSelect.style.display = '';
+      };
+
+      const saveCustomStore = () => {
+        const raw = customInput ? customInput.value.trim() : '';
+        if (!raw) {
+          this.showToast('Masukkan nama lokasi toko terlebih dahulu!', 'error');
+          if (customInput) customInput.focus();
+          return;
+        }
+        const canonical = this.ensureStoreOption(storeSelect, raw);
+        if (!canonical) return;
+
+        let list = [];
+        try {
+          list = JSON.parse(localStorage.getItem('sg_custom_stores') || '[]');
+          if (!Array.isArray(list)) list = [];
+        } catch (e) {
+          list = [];
+        }
+        if (!list.some(item => String(item).toLowerCase() === canonical.toLowerCase())) {
+          list.push(canonical);
+          localStorage.setItem('sg_custom_stores', JSON.stringify(list));
+        }
+
+        storeSelect.value = canonical;
+        localStorage.setItem('sg_active_store', canonical);
+        showSelectMode();
+        if (window.SoundEngine) SoundEngine.playTick();
+        this.showToast(`Lokasi baru disimpan: <strong>${canonical}</strong>`);
+        if (window.FirebaseSync && typeof FirebaseSync.pushToCloud === 'function') {
+          FirebaseSync.pushToCloud();
+        }
+      };
+
+      const cancelCustomStore = () => {
+        storeSelect.value = localStorage.getItem('sg_active_store') || defaultStore;
+        showSelectMode();
+      };
+
       storeSelect.addEventListener('change', (e) => {
         const val = e.target.value;
+        if (val === '__ADD_NEW__') {
+          storeSelect.style.display = 'none';
+          if (customWrap) customWrap.style.display = 'flex';
+          if (customInput) {
+            customInput.value = '';
+            customInput.focus();
+          }
+          this.initLucideIcons();
+          return;
+        }
         localStorage.setItem('sg_active_store', val);
         this.showToast(`Lokasi toko: <strong>${val}</strong>`);
         if (window.FirebaseSync && typeof FirebaseSync.pushToCloud === 'function') {
           FirebaseSync.pushToCloud();
         }
       });
+
+      if (btnSaveCustom) btnSaveCustom.addEventListener('click', saveCustomStore);
+      if (btnCancelCustom) btnCancelCustom.addEventListener('click', cancelCustomStore);
+      if (customInput) {
+        customInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            saveCustomStore();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelCustomStore();
+          }
+        });
+      }
     }
 
     if (dateInput) {
