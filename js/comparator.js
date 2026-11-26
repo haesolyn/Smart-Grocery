@@ -5,6 +5,53 @@
 
 const PriceComparator = {
   STORAGE_KEY: 'sg_benchmark_prices',
+  MAX_PRICE: 100000000,
+  MAX_ITEMS_PER_SECTION: 15,
+
+  clampPrice(val) {
+    const num = parseFloat(val);
+    if (!isFinite(num) || isNaN(num) || num < 0) return 0;
+    return Math.min(this.MAX_PRICE, num);
+  },
+
+  deduplicateDatabase(list) {
+    if (!Array.isArray(list)) return [];
+    const seen = new Map();
+    list.forEach(item => {
+      if (!item || !item.name) return;
+      const key = this.normalize(item.name);
+      if (!key) return;
+      const sanitized = {
+        ...item,
+        name: item.name.trim(),
+        prevPrice: this.clampPrice(item.prevPrice)
+      };
+      if (seen.has(key)) {
+        const prev = seen.get(key);
+        // Pertahankan entri yang lebih baru / punya harga valid
+        if (sanitized.lastUpdated === 'Transaksi Terakhir' || (prev.prevPrice <= 0 && sanitized.prevPrice > 0)) {
+          seen.set(key, { ...prev, ...sanitized });
+        }
+      } else {
+        seen.set(key, sanitized);
+      }
+    });
+    return Array.from(seen.values());
+  },
+
+  getCatalogSections(list) {
+    const items = this.deduplicateDatabase(list || this.getDatabase());
+    const sections = [];
+    for (let i = 0; i < items.length; i += this.MAX_ITEMS_PER_SECTION) {
+      sections.push({
+        index: sections.length + 1,
+        title: `Bagian ${sections.length + 1}`,
+        max: this.MAX_ITEMS_PER_SECTION,
+        items: items.slice(i, i + this.MAX_ITEMS_PER_SECTION)
+      });
+    }
+    return sections;
+  },
 
   // Database harga acuan bulan lalu (Default untuk anak rantau)
   defaultDatabase: [
@@ -35,19 +82,25 @@ const PriceComparator = {
         const dt2Keys = ['telur', 'garam', 'beras', 'wajan'];
         const hasAllDt2 = dt2Keys.every(k => parsed.some(p => this.normalize(p.name).includes(k)));
         if (hasAllDt2) {
-          return parsed;
+          const clean = this.deduplicateDatabase(parsed);
+          if (clean.length !== parsed.length) {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(clean));
+          }
+          return clean;
         }
       }
     } catch (e) {
       console.error('Error loading price database:', e);
     }
     // Set default if empty or missing DT2 items
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.defaultDatabase));
-    return this.defaultDatabase;
+    const defaults = this.deduplicateDatabase(this.defaultDatabase);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(defaults));
+    return defaults;
   },
 
   saveDatabase(db) {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(db));
+    const clean = this.deduplicateDatabase(db);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(clean));
   },
 
   normalize(str) {
@@ -75,7 +128,7 @@ const PriceComparator = {
 
   // F-04: Kalkulasi Komparasi Harga Realtime vs Bulan Lalu
   comparePrice(name, currentUnitPrice, unit) {
-    const current = parseFloat(currentUnitPrice) || 0;
+    const current = this.clampPrice(currentUnitPrice);
     if (current <= 0 || !name) {
       return {
         status: 'empty',
@@ -97,18 +150,20 @@ const PriceComparator = {
         diffPercent: 0,
         prevPrice: 0,
         arrow: '🆕',
-        label: 'Item Baru (Belum ada data bln lalu)',
+        label: 'Item Baru',
+        detailText: 'Belum ada data bln lalu',
         badgeClass: 'new',
         benchmarkName: name
       };
     }
 
-    const prev = benchmark.prevPrice;
+    const prev = this.clampPrice(benchmark.prevPrice);
     const diff = current - prev;
     const diffPercent = prev > 0 ? (diff / prev) * 100 : 0;
     const absDiff = Math.abs(diff);
-    const formattedDiff = absDiff.toLocaleString('id-ID');
-    const formattedPrev = prev.toLocaleString('id-ID');
+    const formattedDiff = Math.round(absDiff).toLocaleString('id-ID');
+    const formattedPrev = Math.round(prev).toLocaleString('id-ID');
+    const pctText = diffPercent > 9999 ? '>9.999' : diffPercent.toFixed(1);
 
     if (diff > 0) {
       return {
@@ -117,9 +172,9 @@ const PriceComparator = {
         diffPercent: diffPercent,
         prevPrice: prev,
         arrow: '↑',
-        label: `↑ Naik Rp ${formattedDiff} (+${diffPercent.toFixed(1)}%)`,
+        label: `Naik Rp ${formattedDiff} (+${pctText}%)`,
         badgeClass: 'higher',
-        detailText: `Bulan lalu Rp ${formattedPrev}. Sekarang lebih mahal Rp ${formattedDiff}.`,
+        detailText: `Bln lalu Rp ${formattedPrev}`,
         benchmarkName: benchmark.name
       };
     } else if (diff < 0) {
@@ -129,9 +184,9 @@ const PriceComparator = {
         diffPercent: diffPercent,
         prevPrice: prev,
         arrow: '↓',
-        label: `↓ Turun Rp ${formattedDiff} (${diffPercent.toFixed(1)}%)`,
+        label: `Turun Rp ${formattedDiff} (${diffPercent.toFixed(1)}%)`,
         badgeClass: 'lower',
-        detailText: `Bulan lalu Rp ${formattedPrev}. Hemat Rp ${formattedDiff}!`,
+        detailText: `Bln lalu Rp ${formattedPrev}`,
         benchmarkName: benchmark.name
       };
     } else {
@@ -141,9 +196,9 @@ const PriceComparator = {
         diffPercent: 0,
         prevPrice: prev,
         arrow: '=',
-        label: `= Sama persis (Rp ${formattedPrev})`,
+        label: `Sama persis (Rp ${formattedPrev})`,
         badgeClass: 'equal',
-        detailText: `Harga persis sama dengan belanja bulan lalu (Rp ${formattedPrev}).`,
+        detailText: `Bln lalu Rp ${formattedPrev}`,
         benchmarkName: benchmark.name
       };
     }
@@ -161,12 +216,14 @@ const PriceComparator = {
   updateBenchmark(name, unitPrice, category, unit) {
     const db = this.getDatabase();
     const queryNorm = this.normalize(name);
+    if (!queryNorm) return;
     const existingIndex = db.findIndex(item => this.normalize(item.name) === queryNorm);
 
-    const price = parseFloat(unitPrice) || 0;
+    const price = this.clampPrice(unitPrice);
     if (price <= 0) return;
 
     if (existingIndex >= 0) {
+      db[existingIndex].name = name.trim();
       db[existingIndex].prevPrice = price;
       db[existingIndex].category = category || db[existingIndex].category;
       db[existingIndex].unit = unit || db[existingIndex].unit;

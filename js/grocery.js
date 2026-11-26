@@ -23,6 +23,24 @@ const GroceryEngine = {
   // Satuan yang didukung
   UNITS: ['pcs', 'kg', 'liter', 'pack', 'karung/5kg'],
 
+  // Batas wajar input agar kalkulasi & tampilan tetap stabil
+  MAX_UNIT_PRICE: 100000000, // Rp 100.000.000 per satuan
+  MAX_QTY: 9999,
+  MAX_DISCOUNT_PERCENT: 100,
+  MAX_DISCOUNT_TIERS: 5,
+
+  clampQty(val) {
+    const num = parseFloat(val);
+    if (isNaN(num) || num <= 0) return 1;
+    return Math.min(this.MAX_QTY, Math.max(0.1, num));
+  },
+
+  clampUnitPrice(val) {
+    const num = parseFloat(val);
+    if (isNaN(num) || num < 0) return 0;
+    return Math.min(this.MAX_UNIT_PRICE, num);
+  },
+
   // Keranjang belanja baru selalu mulai kosong
   defaultItems: [],
 
@@ -30,7 +48,15 @@ const GroceryEngine = {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => ({
+            ...item,
+            qty: this.clampQty(item.qty),
+            unitPrice: this.clampUnitPrice(item.unitPrice),
+            discountStr: (item.discountStr || '0').toString().trim().slice(0, 40)
+          }));
+        }
       }
     } catch (e) {
       console.error('Error loading cart items:', e);
@@ -74,22 +100,23 @@ const GroceryEngine = {
 
     // 1. Cek Potongan Nominal Langsung (contoh: "Rp 5000", "5000", "-5000")
     if (!rawStr.includes('+') && (rawStr.startsWith('rp') || (parseFloat(rawStr.replace(/[^\d.]/g, '')) > 100 && !rawStr.includes('%')))) {
-      const nominal = parseFloat(rawStr.replace(/[^\d.]/g, '')) || 0;
+      const parsedNominal = parseFloat(rawStr.replace(/[^\d.]/g, ''));
+      const nominal = isFinite(parsedNominal) && parsedNominal > 0 ? parsedNominal : 0;
       const discount = Math.min(base, nominal);
       const finalP = Math.max(0, base - discount);
-      const effPct = base > 0 ? (discount / base) * 100 : 0;
+      const effPct = base > 0 ? Math.min(100, (discount / base) * 100) : 0;
 
       result.finalPrice = Math.round(finalP);
-      result.totalDiscount = Math.round(discount);
-      result.effectivePercent = Math.round(effPct * 10) / 10;
-      result.displayText = `Potongan Rp ${Math.round(discount).toLocaleString('id-ID')}`;
+      result.totalDiscount = Math.min(Math.round(base), Math.round(discount));
+      result.effectivePercent = Math.min(100, Math.round(effPct * 10) / 10);
+      result.displayText = `Potongan Rp ${result.totalDiscount.toLocaleString('id-ID')}`;
       result.steps = [
         {
           step: 1,
           description: `Potongan Langsung Tunai`,
-          priceBefore: base,
-          discountAmount: discount,
-          priceAfter: finalP
+          priceBefore: Math.round(base),
+          discountAmount: result.totalDiscount,
+          priceAfter: result.finalPrice
         }
       ];
       return result;
@@ -99,7 +126,10 @@ const GroceryEngine = {
     const parts = rawStr
       .split('+')
       .map(part => parseFloat(part.replace(/[^\d.]/g, '')))
-      .filter(num => !isNaN(num) && num > 0);
+      .filter(num => isFinite(num) && num > 0)
+      .map(num => Math.round(Math.min(this.MAX_DISCOUNT_PERCENT, num) * 100) / 100)
+      .filter(num => num > 0)
+      .slice(0, this.MAX_DISCOUNT_TIERS);
 
     if (parts.length === 0) {
       return result;
@@ -108,10 +138,12 @@ const GroceryEngine = {
     result.isTiered = parts.length > 1;
     let currentPrice = base;
 
-    parts.forEach((pct, index) => {
+    for (let index = 0; index < parts.length; index++) {
+      if (currentPrice <= 0) break;
+      const pct = parts[index];
       // Diskon diterapkan terhadap currentPrice (harga yang telah dikurangi diskon sebelumnya)
       const stepDiscount = currentPrice * (pct / 100);
-      const nextPrice = currentPrice - stepDiscount;
+      const nextPrice = Math.max(0, currentPrice - stepDiscount);
 
       result.steps.push({
         step: index + 1,
@@ -123,19 +155,23 @@ const GroceryEngine = {
       });
 
       currentPrice = nextPrice;
-    });
+    }
 
-    const totalDiscount = base - currentPrice;
-    const effectivePercent = base > 0 ? (totalDiscount / base) * 100 : 0;
+    const finalPrice = Math.max(0, Math.round(currentPrice));
+    const roundedBase = Math.round(base);
+    const totalDiscount = Math.max(0, Math.min(roundedBase, roundedBase - finalPrice));
+    const effectivePercent = roundedBase > 0 ? Math.min(100, (totalDiscount / roundedBase) * 100) : 0;
 
-    result.finalPrice = Math.max(0, Math.round(currentPrice));
-    result.totalDiscount = Math.round(totalDiscount);
-    result.effectivePercent = Math.round(effectivePercent * 10) / 10;
+    result.finalPrice = finalPrice;
+    result.totalDiscount = totalDiscount;
+    result.effectivePercent = Math.min(100, Math.round(effectivePercent * 10) / 10);
 
-    if (result.isTiered) {
-      result.displayText = `Diskon Bertingkat ${parts.join('% + ')}% (Efektif ${result.effectivePercent}%)`;
+    if (result.steps.length > 1) {
+      result.isTiered = true;
+      result.displayText = `Diskon Bertingkat ${result.steps.map(s => s.percent).join('% + ')}% (Efektif ${result.effectivePercent}%)`;
     } else {
-      result.displayText = `Diskon ${parts[0]}%`;
+      result.isTiered = false;
+      result.displayText = `Diskon ${result.steps[0].percent}%`;
     }
 
     return result;
@@ -146,8 +182,8 @@ const GroceryEngine = {
    * Total = (Harga Satuan x Qty) - Diskon Bertingkat
    */
   calculateItem(item) {
-    const qty = Math.max(0.1, parseFloat(item.qty) || 1);
-    const unitPrice = Math.max(0, parseFloat(item.unitPrice) || 0);
+    const qty = this.clampQty(item.qty);
+    const unitPrice = this.clampUnitPrice(item.unitPrice);
     const rawSubtotal = qty * unitPrice;
 
     const discountInfo = this.calculateTieredDiscount(rawSubtotal, item.discountStr);
@@ -202,9 +238,9 @@ const GroceryEngine = {
       name: itemData.name.trim(),
       category: itemData.category || 'others',
       unit: itemData.unit || 'pcs',
-      qty: Math.max(0.1, parseFloat(itemData.qty) || 1),
-      unitPrice: Math.max(0, parseFloat(itemData.unitPrice) || 0),
-      discountStr: (itemData.discountStr || '0').trim(),
+      qty: this.clampQty(itemData.qty),
+      unitPrice: this.clampUnitPrice(itemData.unitPrice),
+      discountStr: (itemData.discountStr || '0').trim().slice(0, 40),
       createdAt: Date.now()
     };
 
@@ -224,9 +260,9 @@ const GroceryEngine = {
       name: itemData.name ? itemData.name.trim() : items[index].name,
       category: itemData.category || items[index].category,
       unit: itemData.unit || items[index].unit,
-      qty: itemData.qty !== undefined ? Math.max(0.1, parseFloat(itemData.qty)) : items[index].qty,
-      unitPrice: itemData.unitPrice !== undefined ? Math.max(0, parseFloat(itemData.unitPrice)) : items[index].unitPrice,
-      discountStr: itemData.discountStr !== undefined ? itemData.discountStr.trim() : items[index].discountStr
+      qty: itemData.qty !== undefined ? this.clampQty(itemData.qty) : items[index].qty,
+      unitPrice: itemData.unitPrice !== undefined ? this.clampUnitPrice(itemData.unitPrice) : items[index].unitPrice,
+      discountStr: itemData.discountStr !== undefined ? itemData.discountStr.trim().slice(0, 40) : items[index].discountStr
     };
 
     this.saveItems(items);
@@ -249,11 +285,11 @@ const GroceryEngine = {
       return { deleted: true };
     }
 
-    // Bulatkan jika desimal
+    // Bulatkan jika desimal dan batasi agar tidak melewati MAX_QTY
     if (newQty < 1 && newQty > 0) {
       newQty = Math.round(newQty * 10) / 10;
     } else {
-      newQty = Math.round(newQty);
+      newQty = Math.min(this.MAX_QTY, Math.round(newQty));
     }
 
     items[index].qty = newQty;

@@ -14,7 +14,39 @@ const ShoppingHistory = {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.map(session => {
+            const safeItems = Array.isArray(session.items)
+              ? session.items.map(it => {
+                  const qty = GroceryEngine.clampQty(it.qty);
+                  const unitPrice = GroceryEngine.clampUnitPrice(it.unitPrice);
+                  const discountStr = (it.discountStr || '0').toString().trim().slice(0, 40);
+                  const calc = GroceryEngine.calculateTieredDiscount(qty * unitPrice, discountStr);
+                  return {
+                    ...it,
+                    qty,
+                    unitPrice,
+                    discountStr,
+                    finalPrice: calc.finalPrice,
+                    totalDiscount: calc.totalDiscount
+                  };
+                })
+              : [];
+            const totalSpent = safeItems.length > 0
+              ? safeItems.reduce((sum, it) => sum + it.finalPrice, 0)
+              : Math.min(GroceryEngine.MAX_UNIT_PRICE * GroceryEngine.MAX_QTY, Math.max(0, parseFloat(session.totalSpent) || 0));
+            const totalSavings = safeItems.length > 0
+              ? safeItems.reduce((sum, it) => sum + it.totalDiscount, 0)
+              : Math.min(totalSpent, Math.max(0, parseFloat(session.totalSavings) || 0));
+            return {
+              ...session,
+              totalSpent: Math.round(totalSpent),
+              totalSavings: Math.round(totalSavings),
+              items: safeItems
+            };
+          });
+        }
       }
     } catch (e) {
       console.error('Error loading history:', e);
@@ -90,9 +122,9 @@ const ShoppingHistory = {
         name: item.name,
         category: item.category,
         unit: item.unit,
-        qty: item.qty,
-        unitPrice: item.unitPrice,
-        discountStr: item.discountStr || '0',
+        qty: GroceryEngine.clampQty(item.qty),
+        unitPrice: GroceryEngine.clampUnitPrice(item.unitPrice),
+        discountStr: (item.discountStr || '0').toString().trim().slice(0, 40),
         createdAt: Date.now()
       });
     });

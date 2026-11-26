@@ -116,10 +116,13 @@
       </div>
     </header>
 
-    <!-- F-05: BANNER PERINGATAN OVERBUDGET (Menyala Merah Tegas saat > 100%) -->
+    <!-- F-05: BANNER PERINGATAN OVERBUDGET (Floating tanpa menggeser UI) -->
     <div class="overbudget-banner" id="overbudget-alert-banner" style="display: none;">
       <i data-lucide="alert-octagon" style="width: 18px; height: 18px; flex-shrink: 0;"></i>
-      <span>Total belanja melebihi batas saldo dompet! Kurangi kuantitas atau batalkan barang sekunder.</span>
+      <span style="flex: 1; min-width: 0;">Total belanja melebihi batas saldo dompet! Kurangi kuantitas atau batalkan barang sekunder.</span>
+      <button type="button" class="overbudget-close-btn" id="btn-dismiss-overbudget" aria-label="Tutup peringatan" title="Tutup peringatan">
+        <i data-lucide="x" style="width: 15px; height: 15px;"></i>
+      </button>
     </div>
 
     <!-- F-05: PENGENDALI ANGGARAN (SAFETY CAP) WIDGET STICKY -->
@@ -384,15 +387,15 @@
             <div class="budget-setting-card">
               <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Batas Maksimal Uang (Safety Cap)</label>
               <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <input type="number" class="form-input" id="input-budget-setting" inputmode="numeric" placeholder="Contoh: 350000" style="font-size: 18px; font-weight: 700;">
+                <input type="number" class="form-input" id="input-budget-setting" inputmode="numeric" min="10000" max="1000000000" placeholder="Contoh: 350000" style="font-size: 18px; font-weight: 700;">
                 <button type="button" class="btn-primary" id="btn-save-budget-setting" style="width: 100px;">Simpan</button>
               </div>
 
               <!-- Quick Budget Preset Chips -->
               <div class="quick-chips-row">
-                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(100000)">Rp 100.000 (Uji DT2)</button>
-                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(150000)">Rp 150.000 (Uji F5)</button>
-                <button type="button" class="quick-chip active" onclick="App.setBudgetPreset(350000)">Rp 350.000 (Kasus Rian)</button>
+                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(100000)">Rp 100.000</button>
+                <button type="button" class="quick-chip" onclick="App.setBudgetPreset(150000)">Rp 150.000</button>
+                <button type="button" class="quick-chip active" onclick="App.setBudgetPreset(350000)">Rp 350.000</button>
                 <button type="button" class="quick-chip" onclick="App.setBudgetPreset(500000)">Rp 500.000</button>
               </div>
             </div>
@@ -510,9 +513,9 @@
           </div>
 
           <!-- F-01: Satuan & Kuantitas (Touch-Friendly Stepper) -->
-          <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; margin-bottom: 14px;">
+          <div class="unit-qty-row">
             <!-- Satuan Barang -->
-            <div>
+            <div class="unit-qty-field">
               <label class="form-label">Satuan</label>
               <div class="unit-selector-row" id="unit-pills-container">
                 <button type="button" class="unit-btn active" data-unit="pcs">pcs</button>
@@ -524,11 +527,11 @@
             </div>
 
             <!-- Jumlah / Kuantitas -->
-            <div>
+            <div class="unit-qty-field">
               <label class="form-label">Jumlah / Qty</label>
-              <div class="stepper-control" style="height: 40px; margin-top: 6px;">
+              <div class="stepper-control modal-qty-stepper">
                 <button type="button" class="stepper-btn" id="modal-qty-minus">-</button>
-                <input type="number" id="input-item-qty" inputmode="numeric" value="1" min="0.1" step="any" class="form-input" style="height: 100%; border: none; text-align: center; font-weight: 800; font-size: 16px; background: transparent; padding: 0;">
+                <input type="number" id="input-item-qty" inputmode="numeric" value="1" min="0.1" max="9999" step="any" class="form-input">
                 <button type="button" class="stepper-btn" id="modal-qty-plus">+</button>
               </div>
             </div>
@@ -540,7 +543,7 @@
               <label class="form-label" for="input-item-price" style="margin-bottom: 0;">Harga Satuan (Rp) *</label>
               <span id="modal-benchmark-tag" style="font-size: 11px; color: var(--text-muted);"></span>
             </div>
-            <input type="number" class="form-input" id="input-item-price" inputmode="numeric" placeholder="Contoh: 32500" required style="font-size: 18px; font-weight: 800;">
+            <input type="number" class="form-input" id="input-item-price" inputmode="numeric" min="1" max="100000000" placeholder="Contoh: 32500" required style="font-size: 18px; font-weight: 800;">
 
             <!-- Quick Price Add Chips (Ergonomis saat mendorong troli) -->
             <div class="quick-chips-row">
@@ -583,7 +586,7 @@
             </div>
 
             <!-- Custom Discount Input -->
-            <input type="text" class="form-input" id="input-item-discount" placeholder="cth. 50% + 20% atau 25% atau Rp 5.000" style="height: 42px; font-size: 13px;">
+            <input type="text" class="form-input" id="input-item-discount" maxlength="40" placeholder="cth. 50% + 20% atau 25% atau Rp 5.000" style="height: 42px; font-size: 13px;">
 
             <!-- Breakdown Perhitungan Matematis Diskon Bertingkat -->
             <div class="discount-breakdown-steps" id="discount-breakdown-box" style="display: none;">
@@ -1249,17 +1252,17 @@
       </div>
     </div>
 
-    <!-- Modal Konfirmasi Hapus Aman (SRS F-06A & UX) -->
+    <!-- Modal Konfirmasi Pop-up In-App (SRS F-06A & UX) -->
     <div class="modal-overlay" id="modal-confirm-clear">
-      <div class="modal-sheet" style="max-height: 280px; padding: 20px 18px; text-align: center;">
-        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); color: var(--color-danger-light); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-          <i data-lucide="trash-2" style="width: 24px; height: 24px;"></i>
+      <div class="confirm-dialog-card">
+        <div class="confirm-dialog-icon" id="confirm-modal-icon-wrap">
+          <i data-lucide="trash-2" id="confirm-modal-icon" style="width: 24px; height: 24px;"></i>
         </div>
-        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text-main);">Kosongkan Troli Belanja?</h3>
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">Seluruh daftar barang yang ada di troli saat ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.</p>
+        <h3 id="confirm-modal-title" style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text-main);">Kosongkan Troli Belanja?</h3>
+        <p id="confirm-modal-message" style="font-size: 12px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5;">Seluruh daftar barang yang ada di troli saat ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <button type="button" class="btn-cancel" onclick="App.closeConfirmClearModal()">Batal</button>
-          <button type="button" class="btn-primary" style="background: var(--color-danger); border-color: var(--color-danger);" onclick="App.executeClearCart()">Ya, Kosongkan</button>
+          <button type="button" class="btn-secondary" id="btn-confirm-cancel" onclick="App.closeConfirmClearModal()">Batal</button>
+          <button type="button" class="btn-primary" id="btn-confirm-proceed" style="background: var(--color-danger); border-color: var(--color-danger);" onclick="App.executeConfirmAction()">Ya, Kosongkan</button>
         </div>
       </div>
     </div>

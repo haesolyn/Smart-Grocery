@@ -538,7 +538,7 @@ const App = {
     if (btnQtyPlus && inputQty) {
       btnQtyPlus.addEventListener('click', () => {
         let val = parseFloat(inputQty.value) || 1;
-        inputQty.value = Math.round(val + 1);
+        inputQty.value = Math.min(GroceryEngine.MAX_QTY, Math.round(val + 1));
         SoundEngine.playTick();
         this.recalculateModalItem();
       });
@@ -589,8 +589,9 @@ const App = {
     if (btnSaveBudget) {
       btnSaveBudget.addEventListener('click', () => {
         const inputSetting = document.getElementById('input-budget-setting');
-        const val = parseFloat(inputSetting.value) || 500000;
-        BudgetSafetyCap.setCap(val);
+        const rawVal = parseFloat(inputSetting.value);
+        const val = BudgetSafetyCap.setCap(isNaN(rawVal) ? BudgetSafetyCap.DEFAULT_CAP : rawVal);
+        inputSetting.value = val;
         this.renderSafetyCap();
         this.showToast(`Batas limit diatur ke <strong>${this.formatRupiah(val)}</strong>`);
         SoundEngine.playSuccessChime();
@@ -1197,14 +1198,20 @@ const App = {
     }
 
     if (btnLogout) {
-      btnLogout.addEventListener('click', async () => {
+      btnLogout.addEventListener('click', () => {
         if (!window.FirebaseSync) return;
-        if (confirm('Keluar dari akun? Data troli belanja Anda akan tetap aman tersimpan di cloud.')) {
-          sessionStorage.removeItem('sg_guest_unlocked');
-          await FirebaseSync.logout();
-          this.checkLandingGate();
-          SoundEngine.playTick();
-        }
+        this.openConfirmModal({
+          title: 'Keluar dari Akun?',
+          message: 'Data troli dan riwayat belanja Anda akan tetap aman tersimpan di cloud.',
+          confirmText: 'Ya, Keluar',
+          icon: 'log-out',
+          onConfirm: async () => {
+            sessionStorage.removeItem('sg_guest_unlocked');
+            await FirebaseSync.logout();
+            this.checkLandingGate();
+            SoundEngine.playTick();
+          }
+        });
       });
     }
 
@@ -1316,22 +1323,51 @@ const App = {
         this.recalculateModalItem();
       });
 
-      // Tutup suggestions jika klik di luar
+      // Tutup suggestions jika klik di luar atau tekan Escape
       document.addEventListener('click', (e) => {
         if (!inputName.contains(e.target) && !suggestionsBox.contains(e.target)) {
           suggestionsBox.style.display = 'none';
         }
       });
+
+      inputName.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          suggestionsBox.style.display = 'none';
+        }
+      });
     }
 
-    // Live recalculation F-02, F-03, F-04 saat input berubah
-    [inputPrice, inputQty, inputDiscount].forEach(input => {
-      if (input) {
-        input.addEventListener('input', () => {
-          this.recalculateModalItem();
-        });
-      }
-    });
+    // Live recalculation F-02, F-03, F-04 saat input berubah + guard batas wajar
+    if (inputPrice) {
+      inputPrice.addEventListener('input', () => {
+        const val = parseFloat(inputPrice.value);
+        if (isFinite(val) && val > GroceryEngine.MAX_UNIT_PRICE) {
+          inputPrice.value = GroceryEngine.MAX_UNIT_PRICE;
+          this.showToast(`Harga satuan maksimal ${this.formatRupiah(GroceryEngine.MAX_UNIT_PRICE)}`, 'error');
+        }
+        this.recalculateModalItem();
+      });
+    }
+
+    if (inputQty) {
+      inputQty.addEventListener('input', () => {
+        const val = parseFloat(inputQty.value);
+        if (isFinite(val) && val > GroceryEngine.MAX_QTY) {
+          inputQty.value = GroceryEngine.MAX_QTY;
+          this.showToast(`Kuantitas maksimal ${GroceryEngine.MAX_QTY}`, 'error');
+        }
+        this.recalculateModalItem();
+      });
+    }
+
+    if (inputDiscount) {
+      inputDiscount.addEventListener('input', () => {
+        if (inputDiscount.value.length > 40) {
+          inputDiscount.value = inputDiscount.value.slice(0, 40);
+        }
+        this.recalculateModalItem();
+      });
+    }
   },
 
   // Switch Tab View
@@ -1595,12 +1631,28 @@ const App = {
       msgIcon.setAttribute('data-lucide', evaluation.status === 'safe' ? 'pie-chart' : (evaluation.status === 'warning' ? 'alert-circle' : 'alert-octagon'));
     }
 
-    // F-05: Peringatan Banner Merah Tegas saat > 100% Saldo Dompet
+    // F-05: Peringatan Banner Merah Tegas saat > 100% Saldo Dompet (floating tanpa menggeser UI)
     const overbudgetBanner = document.getElementById('overbudget-alert-banner');
     if (overbudgetBanner) {
+      if (!overbudgetBanner.dataset.dismissBound) {
+        const btnDismiss = document.getElementById('btn-dismiss-overbudget');
+        if (btnDismiss) {
+          btnDismiss.addEventListener('click', () => {
+            this.overbudgetDismissedForAmount = this.lastOverbudgetAmount;
+            overbudgetBanner.style.display = 'none';
+          });
+        }
+        overbudgetBanner.dataset.dismissBound = '1';
+      }
+
       if (totals.totalExpenditure > evaluation.cap) {
-        overbudgetBanner.style.display = 'flex';
+        this.lastOverbudgetAmount = totals.totalExpenditure;
+        if (this.overbudgetDismissedForAmount !== totals.totalExpenditure) {
+          overbudgetBanner.style.display = 'flex';
+        }
       } else {
+        this.overbudgetDismissedForAmount = null;
+        this.lastOverbudgetAmount = null;
         overbudgetBanner.style.display = 'none';
       }
     }
@@ -1682,6 +1734,8 @@ const App = {
     }
 
     this.recalculateModalItem();
+    const suggestionsBox = document.getElementById('item-name-suggestions');
+    if (suggestionsBox) suggestionsBox.style.display = 'none';
     modal.classList.add('active');
 
     // Auto-focus pada input nama jika barang baru
@@ -1730,7 +1784,7 @@ const App = {
     const input = document.getElementById('input-item-price');
     if (!input) return;
     const current = parseFloat(input.value) || 0;
-    input.value = current + amount;
+    input.value = Math.min(GroceryEngine.MAX_UNIT_PRICE, current + amount);
     SoundEngine.playTick();
     this.recalculateModalItem();
   },
@@ -1741,7 +1795,8 @@ const App = {
     if (!input) return;
     const val = input.value.trim();
     if (val && !isNaN(val)) {
-      input.value = val + '000';
+      const next = parseFloat(val + '000');
+      input.value = isFinite(next) ? Math.min(GroceryEngine.MAX_UNIT_PRICE, next) : GroceryEngine.MAX_UNIT_PRICE;
     } else {
       input.value = '1000';
     }
@@ -1757,9 +1812,9 @@ const App = {
     const inputDiscount = document.getElementById('input-item-discount');
 
     const name = inputName ? inputName.value.trim() : '';
-    const unitPrice = parseFloat(inputPrice ? inputPrice.value : 0) || 0;
-    const qty = parseFloat(inputQty ? inputQty.value : 1) || 1;
-    const discountStr = inputDiscount ? inputDiscount.value.trim() : '0';
+    const unitPrice = GroceryEngine.clampUnitPrice(inputPrice ? inputPrice.value : 0);
+    const qty = GroceryEngine.clampQty(inputQty ? inputQty.value : 1);
+    const discountStr = inputDiscount ? inputDiscount.value.trim().slice(0, 40) : '0';
 
     // 1. F-04: Komparator Harga Preview vs Bulan Lalu
     const compBox = document.getElementById('comparator-preview-box');
@@ -1875,13 +1930,16 @@ const App = {
       return;
     }
 
+    const safeUnitPrice = GroceryEngine.clampUnitPrice(unitPrice);
+    const safeQty = GroceryEngine.clampQty(qty);
+
     const itemData = {
       name,
       category: this.selectedCategory,
       unit: this.selectedUnit,
-      qty,
-      unitPrice,
-      discountStr
+      qty: safeQty,
+      unitPrice: safeUnitPrice,
+      discountStr: discountStr.slice(0, 40)
     };
 
     const editId = editIdInput ? editIdInput.value : '';
@@ -1892,8 +1950,8 @@ const App = {
     } else {
       // Periksa apakah penambahan ini akan melampaui limit anggaran (F-05)
       const currentTotals = GroceryEngine.getCartTotals();
-      const rawSub = qty * unitPrice;
-      const disc = GroceryEngine.calculateTieredDiscount(rawSub, discountStr);
+      const rawSub = safeQty * safeUnitPrice;
+      const disc = GroceryEngine.calculateTieredDiscount(rawSub, itemData.discountStr);
       const projectedTotal = currentTotals.totalExpenditure + disc.finalPrice;
       const cap = BudgetSafetyCap.getCap();
 
@@ -2149,50 +2207,118 @@ const App = {
   },
 
   deleteHistorySession(sessionId) {
-    if (confirm('Hapus arsip transaksi belanja ini?')) {
-      ShoppingHistory.deleteSession(sessionId);
-      this.renderHistory();
-      this.updateStats();
-      this.showToast('Riwayat dihapus');
-    }
+    this.openConfirmModal({
+      title: 'Hapus Arsip Riwayat?',
+      message: 'Catatan transaksi belanja ini akan dihapus permanen dari riwayat.',
+      confirmText: 'Ya, Hapus',
+      icon: 'trash-2',
+      onConfirm: () => {
+        ShoppingHistory.deleteSession(sessionId);
+        this.renderHistory();
+        this.updateStats();
+        SoundEngine.playTick();
+        this.showToast('Riwayat dihapus');
+      }
+    });
   },
 
   // =========================================================================
   // KATALOG ACUAN & STATISTIK (F-04, F-05, F-06)
   // =========================================================================
+  activeCatalogSection: 1,
+
   renderCatalog(filterQuery) {
     const container = document.getElementById('catalog-list-container');
     const badge = document.getElementById('catalog-count-badge');
-    const db = PriceComparator.getDatabase();
+    const sections = PriceComparator.getCatalogSections();
+    const totalItems = sections.reduce((sum, sec) => sum + sec.items.length, 0);
+    const q = filterQuery && filterQuery.trim() !== '' ? filterQuery.toLowerCase().trim() : '';
 
-    let items = db;
-    if (filterQuery && filterQuery.trim() !== '') {
-      const q = filterQuery.toLowerCase().trim();
-      items = db.filter(item => item.name.toLowerCase().includes(q));
-    }
-
-    if (badge) badge.textContent = `${items.length} Produk`;
     if (!container) return;
 
-    if (items.length === 0) {
-      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 13px;">Tidak ada barang yang cocok.</div>`;
-      return;
-    }
-
-    container.innerHTML = '';
-    items.forEach(item => {
+    const createItemRow = (item) => {
       const cat = GroceryEngine.CATEGORIES[item.category] || GroceryEngine.CATEGORIES.others;
       const row = document.createElement('div');
       row.className = 'catalog-item-row';
       row.innerHTML = `
-        <div>
+        <div style="min-width: 0; flex: 1;">
           <div class="catalog-item-name">${cat.icon} ${item.name}</div>
           <div class="catalog-item-cat">Satuan: ${item.unit || 'pcs'} &bull; ${item.lastUpdated || 'Bulan Lalu'}</div>
         </div>
         <div class="catalog-item-price">${this.formatRupiah(item.prevPrice)}</div>
       `;
-      container.appendChild(row);
+      return row;
+    };
+
+    if (totalItems === 0) {
+      if (badge) badge.textContent = '0 Produk';
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 13px;">Belum ada data katalog acuan.</div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+
+    // Mode pencarian: cari lintas semua section & tampilkan terkelompok per section
+    if (q) {
+      let matchedTotal = 0;
+      sections.forEach(sec => {
+        const matched = sec.items.filter(item => item.name.toLowerCase().includes(q));
+        if (matched.length === 0) return;
+        matchedTotal += matched.length;
+
+        const block = document.createElement('div');
+        block.className = 'catalog-section-block';
+        block.innerHTML = `
+          <div class="catalog-section-header">
+            <span>${sec.title}</span>
+            <span class="catalog-section-count">${matched.length} cocok</span>
+          </div>
+        `;
+        matched.forEach(item => block.appendChild(createItemRow(item)));
+        container.appendChild(block);
+      });
+
+      if (badge) badge.textContent = `${matchedTotal} Cocok`;
+      if (matchedTotal === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 13px;">Tidak ada barang yang cocok.</div>`;
+      }
+      return;
+    }
+
+    if (badge) badge.textContent = `${totalItems} Produk • ${sections.length} Bagian`;
+
+    if (this.activeCatalogSection < 1 || this.activeCatalogSection > sections.length) {
+      this.activeCatalogSection = 1;
+    }
+
+    // Tab selector antar section (maks 15 item per section)
+    const tabsWrap = document.createElement('div');
+    tabsWrap.className = 'catalog-section-tabs';
+    sections.forEach(sec => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'catalog-section-tab' + (sec.index === this.activeCatalogSection ? ' active' : '');
+      btn.innerHTML = `<span>${sec.title}</span><span class="tab-count">${sec.items.length}/${sec.max}</span>`;
+      btn.addEventListener('click', () => {
+        this.activeCatalogSection = sec.index;
+        SoundEngine.playTick();
+        this.renderCatalog();
+      });
+      tabsWrap.appendChild(btn);
     });
+    container.appendChild(tabsWrap);
+
+    const activeSec = sections[this.activeCatalogSection - 1];
+    const block = document.createElement('div');
+    block.className = 'catalog-section-block';
+    block.innerHTML = `
+      <div class="catalog-section-header">
+        <span>${activeSec.title}</span>
+        <span class="catalog-section-count">${activeSec.items.length} / ${activeSec.max} item</span>
+      </div>
+    `;
+    activeSec.items.forEach(item => block.appendChild(createItemRow(item)));
+    container.appendChild(block);
   },
 
   updateStats() {
@@ -2381,22 +2507,60 @@ const App = {
     }
   },
 
-  // Modal Konfirmasi Hapus Aman (SRS F-06A & UX Non-blocking)
-  openConfirmClearModal() {
+  // Modal Konfirmasi In-App Aman (SRS F-06A & UX Non-blocking)
+  confirmCallback: null,
+
+  openConfirmModal({ title, message, confirmText = 'Ya, Lanjutkan', icon = 'trash-2', onConfirm } = {}) {
     const modal = document.getElementById('modal-confirm-clear');
+    const titleEl = document.getElementById('confirm-modal-title');
+    const msgEl = document.getElementById('confirm-modal-message');
+    const btnEl = document.getElementById('btn-confirm-proceed');
+    const iconEl = document.getElementById('confirm-modal-icon');
+
+    if (titleEl && title) titleEl.textContent = title;
+    if (msgEl && message) msgEl.textContent = message;
+    if (btnEl) btnEl.textContent = confirmText;
+    if (iconEl) iconEl.setAttribute('data-lucide', icon);
+
+    this.confirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+
     if (modal) {
+      if (!modal.dataset.backdropBound) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) this.closeConfirmClearModal();
+        });
+        modal.dataset.backdropBound = '1';
+      }
       modal.classList.add('active');
       this.initLucideIcons();
     }
   },
 
+  openConfirmClearModal() {
+    this.openConfirmModal({
+      title: 'Kosongkan Troli Belanja?',
+      message: 'Seluruh daftar barang yang ada di troli saat ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan.',
+      confirmText: 'Ya, Kosongkan',
+      icon: 'trash-2',
+      onConfirm: () => this.executeClearCart()
+    });
+  },
+
   closeConfirmClearModal() {
     const modal = document.getElementById('modal-confirm-clear');
     if (modal) modal.classList.remove('active');
+    this.confirmCallback = null;
+  },
+
+  async executeConfirmAction() {
+    const cb = this.confirmCallback;
+    this.closeConfirmClearModal();
+    if (typeof cb === 'function') {
+      await cb();
+    }
   },
 
   executeClearCart() {
-    this.closeConfirmClearModal();
     GroceryEngine.clearCart();
     this.renderCart();
     this.showToast('Seluruh isi troli berhasil dikosongkan!');

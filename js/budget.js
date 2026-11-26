@@ -7,12 +7,20 @@
 const BudgetSafetyCap = {
   STORAGE_KEY: 'sg_budget_cap',
   DEFAULT_CAP: 350000, // Rp 350.000 batas dompet Kasus Rian (Daily Test 2)
+  MIN_CAP: 10000,
+  MAX_CAP: 1000000000, // Maksimal Rp 1 miliar
+
+  clampCap(val) {
+    const parsed = parseFloat(val);
+    if (!isFinite(parsed) || isNaN(parsed)) return this.DEFAULT_CAP;
+    return Math.min(this.MAX_CAP, Math.max(this.MIN_CAP, parsed));
+  },
 
   getCap() {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        return Math.max(10000, parseFloat(stored) || this.DEFAULT_CAP);
+        return this.clampCap(stored);
       }
     } catch (e) {
       console.error('Error loading budget cap:', e);
@@ -22,7 +30,7 @@ const BudgetSafetyCap = {
   },
 
   setCap(newCap) {
-    const cap = Math.max(10000, parseFloat(newCap) || this.DEFAULT_CAP);
+    const cap = this.clampCap(newCap);
     localStorage.setItem(this.STORAGE_KEY, cap);
     if (window.FirebaseSync && typeof FirebaseSync.syncBudget === 'function') {
       FirebaseSync.syncBudget(cap);
